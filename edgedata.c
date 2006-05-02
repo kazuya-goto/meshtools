@@ -1,0 +1,160 @@
+/*
+ * edgedata.c
+ *
+ * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Created on Mar 14, 2006
+ * Last modified: Mar 17, 2006
+ *
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include "nodedata.h"
+#include "edgedata.h"
+
+typedef struct _Edge {
+  int onid; /* node id of the other end of the edge */
+  int mnid; /* node id of the middle node */
+} Edge;
+
+typedef struct _EdgeData {
+  int nid;
+  int n_edge;  /* number of edges */
+  int max_edge;
+  Edge *edge; /* edge detail */
+} EdgeData;
+
+#define MAX_EDGE_INIT 0
+
+static int n_node_init;
+static EdgeData *edge_data;
+
+void edge_init(void)
+{
+  int i;
+
+  n_node_init = number_of_nodes();
+  if (n_node_init == 0) {
+    fprintf(stderr, "Error: node data not set\n");
+    exit(1);
+  }
+
+  edge_data = (EdgeData *) malloc(n_node_init * sizeof(EdgeData));
+  if (edge_data == NULL) {
+    perror("edge_init");
+    exit(1);
+  }
+
+  for (i = 0; i < n_node_init; i++) {
+    edge_data[i].nid = get_global_node_id(i);
+    edge_data[i].n_edge = 0;
+    edge_data[i].max_edge = MAX_EDGE_INIT;
+    edge_data[i].edge = (Edge *) malloc(MAX_EDGE_INIT * sizeof(Edge));
+    if (edge_data[i].edge == NULL) {
+      perror("edge_init");
+      exit(1);
+    }
+  }
+}
+
+void edge_finalize(void)
+{
+  int i;
+
+  for (i = 0; i < n_node_init; i++) {
+    free(edge_data[i].edge);
+  }
+  free(edge_data);
+}
+
+int middle_node(int i1, int i2, int *mnidp)
+{
+  int li1;
+  EdgeData *edp;
+  Edge *ep;
+  int j;
+
+  /* make i1 smaller than  i2 */
+  if (i1 > i2) {
+    int tmp = i1;
+    i1 = i2;
+    i2 = tmp;
+  } else if (i1 == i2) {
+    fprintf(stderr, "no edge between identical node\n");
+    exit(1);
+  }
+
+  li1 = get_local_node_id(i1);
+  edp = &(edge_data[li1]);
+
+  /* if the edge i1-i2 is registered, return the middle-node */
+  for (j = 0; j < edp->n_edge; j++) {
+    if (edp->edge[j].onid == i2) {
+      *mnidp = edp->edge[j].mnid;
+      return 0;
+    }
+  }
+
+  /* not found: register as a new edge */
+  if (edp->n_edge == edp->max_edge) {
+    edp->max_edge += 8;
+    edp->edge = (Edge *) realloc(edp->edge, edp->max_edge * sizeof(Edge));
+    if (edp->edge == NULL) {
+      perror("new_edge");
+      exit(1);
+    }
+  }
+
+  j = edp->n_edge;
+  ep = &(edp->edge[j]);
+
+  ep->onid = i2;
+  ep->mnid = new_middle_node(i1, i2);
+  edp->n_edge++;
+
+  *mnidp = ep->mnid;
+  return 1;
+}
+
+void print_edge_stat(FILE *log_file)
+{
+  int min, max;
+  int sum = 0;
+  int n_node_actv = 0;
+  double avr;
+  int sum_max = 0;
+  int i;
+
+  for (i = 0; i < n_node_init; i++) {
+    int ne = edge_data[i].n_edge;
+
+#ifdef DEBUG
+    fprintf(log_file, "%d: %d / %d\n",
+	    edge_data[i].nid, ne, edge_data[i].max_edge);
+#endif
+    sum_max += edge_data[i].max_edge;
+
+    if (ne == 0) continue;
+
+    if (sum == 0) {
+      min = max = ne;
+    } else {
+      if (ne < min) min = ne;
+      if (ne > max) max = ne;
+    }
+    sum += ne;
+    n_node_actv++;
+  }
+
+  avr = (double) sum / (double) n_node_actv;
+
+  fprintf(log_file,
+	  "             initial number of nodes : %d\n"
+	  "              number of nodes in use : %d\n"
+	  "number of added nodes (middle nodes) : %d\n"
+	  "             minimum number of edges : %d\n"
+	  "             maximum number of edges : %d\n"
+	  "             average number of edges : %f\n"
+	  "                used / allocated (%%) : %d / %d (%f%%)\n",
+	  n_node_init, n_node_actv, number_of_middle_nodes(), min, max, avr,
+	  sum, sum_max, 100.0*(double)sum/(double)sum_max);
+}
