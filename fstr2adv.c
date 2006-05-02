@@ -70,7 +70,8 @@ int main(int argc, char **argv)
   }
 
   while (fgets(line, MAXLEN, from_file)) {
-    *strchr(line, '\n') = '\0';
+    /* remove '\n' at the end of line */
+    line[strlen(line)-1] = '\0';
 
     /* skip comments */
     if (line[0] == '#' ||

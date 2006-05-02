@@ -92,8 +92,13 @@ void new_node(int id, double x, double y, double z)
   new_node_with_key(id, x, y, z, id);
 }
 
-static int node_compar(const NodeData *n1, const NodeData *n2)
+static int node_compar(const void *vn1, const void *vn2)
 {
+  const NodeData *n1, *n2;
+
+  n1 = (NodeData *) vn1;
+  n2 = (NodeData *) vn2;
+
   if (n1->id < n2->id) return -1;
   else if (n1->id == n2->id) return 0;
   else return 1;
@@ -109,15 +114,13 @@ static NodeData *search_node(int i1)
 #ifdef DEBUG
   if (call == 0) {
     fprintf(stderr, "start sorting node data... ");
-    qsort(node_data, n_node, sizeof(NodeData),
-	  (int (*)(const void*, const void*))node_compar);
+    qsort(node_data, n_node, sizeof(NodeData), node_compar);
     fprintf(stderr, "done.\n");
     call++;
   }
 #endif
   node1.id = i1;
-  n1p = bsearch(&node1, node_data, n_node, sizeof(NodeData),
-		(int (*)(const void*, const void*))node_compar);
+  n1p = bsearch(&node1, node_data, n_node, sizeof(NodeData), node_compar);
   if (n1p == NULL) {
     fprintf(stderr,
             "Error: searching node id failed (node_id may not be sorted)\n"
@@ -218,19 +221,23 @@ char *last_node_data_line(char *line, int maxlen)
   return line;
 }
 
-static int renum_compar(const RenumData *r1, const RenumData *r2)
+static int renum_compar(const void *vr1, const void *vr2)
 {
+  const RenumData *r1, *r2;
+
+  r1 = (RenumData *) vr1;
+  r2 = (RenumData *) vr2;
+
   if (r1->key < r2->key) return -1;
-  else if (r1->key == r2->key) {
+  else if (r1->key > r2->key) return 1;
+  else { /* r1->key == r2->key */
     if (r1->id < r2->id) return -1;
-#ifdef DEBUG
-    else if (r1->id == r2->id) {
+    else if (r1->id > r2->id) return 1;
+    else { /* r1->id == r2->id */
       fprintf(stderr, "Error: identical nodes in node_data\n");
       exit(1);
     }
-#endif
-    else return 1;
-  } else return 1;
+  }
 }
 
 void node_renum(void)
@@ -238,8 +245,7 @@ void node_renum(void)
   int i;
   NodeData *n1p;
 
-  qsort(renum_data, n_node, sizeof(RenumData),
-	(int (*)(const void*, const void*))renum_compar);
+  qsort(renum_data, n_node, sizeof(RenumData), renum_compar);
   for (i = 0; i < n_node; i++) {
     n1p = search_node(renum_data[i].id);
     n1p->new_id = i+1;
