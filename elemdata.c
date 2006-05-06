@@ -17,10 +17,12 @@ typedef struct _ElemData342 {
   int n10;
 } ElemData342;
 
+enum { MAX_ELEM_INIT = 1024, MAX_ELEM_GROW = 2 };
+
 static int n_elem = 0;
 
 static ElemData342 *elem_data;
-static int max_elem = 1024;
+static int max_elem;
 
 void elem_init(void)
 {
@@ -29,6 +31,7 @@ void elem_init(void)
     perror("elem_init");
     exit(1);
   }
+  max_elem = MAX_ELEM_INIT;
 }
 
 void elem_finalize(void)
@@ -41,12 +44,15 @@ void new_elem(int id,
 	      int n6, int n7, int n8, int n9, int n10)
 {
   if (n_elem == max_elem) {
-    max_elem *= 2;
-    elem_data = (ElemData342 *) realloc(elem_data, max_elem * sizeof(ElemData342));
-    if (elem_data == NULL) {
+    ElemData342 *edp;
+
+    edp = (ElemData342 *) realloc(elem_data, MAX_ELEM_GROW * max_elem * sizeof(ElemData342));
+    if (edp == NULL) {
       perror("new_elem");
       exit(1);
     }
+    max_elem *= MAX_ELEM_GROW;
+    elem_data = edp;
   }
 
   if (n_elem > 0 && elem_data[n_elem - 1].id >= id) {

@@ -24,31 +24,36 @@ typedef struct _RenumData {
   int key;
 } RenumData;
 
+enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 2 };
+
 static int n_node = 0;
 static int n_mnode = 0;
 
 static NodeData *node_data;
 static RenumData *renum_data;
-static int max_node = 1024;
+static int max_node;
 
 void node_init(void)
 {
-  node_data = (NodeData *) malloc(max_node * sizeof(NodeData));
+  node_data = (NodeData *) malloc(MAX_NODE_INIT * sizeof(NodeData));
   if (node_data == NULL) {
     perror("node_init");
     exit(1);
   }
 
-  renum_data = (RenumData *) malloc(max_node * sizeof(RenumData));
+  renum_data = (RenumData *) malloc(MAX_NODE_INIT * sizeof(RenumData));
   if (renum_data == NULL) {
     perror("node_init");
     exit(1);
   }
+
+  max_node = MAX_NODE_INIT;
 }
 
 void node_finalize(void)
 {
   free(node_data);
+  free(renum_data);
 }
 
 static void new_node_with_key(int id,
@@ -58,17 +63,24 @@ static void new_node_with_key(int id,
 			      int key)
 {
   if (n_node == max_node) {
-    max_node *= 2;
-    node_data = (NodeData *) realloc(node_data, max_node * sizeof(NodeData));
-    if (node_data == NULL) {
+    NodeData *ndp;
+    RenumData *rdp;
+
+    ndp = (NodeData *) realloc(node_data, MAX_NODE_GROW * max_node * sizeof(NodeData));
+    if (ndp == NULL) {
       perror("new_node");
       exit(1);
     }
-    renum_data = (RenumData *) realloc(renum_data, max_node * sizeof(RenumData));
+
+    rdp = (RenumData *) realloc(renum_data, MAX_NODE_GROW * max_node * sizeof(RenumData));
     if (renum_data == NULL) {
       perror("new_node");
       exit(1);
     }
+
+    max_node *= MAX_NODE_GROW;
+    node_data = ndp;
+    renum_data = rdp;
   }
 
   if (n_node > 0 && node_data[n_node-1].id >= id) {
