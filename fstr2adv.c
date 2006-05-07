@@ -140,16 +140,17 @@ int main(int argc, char **argv)
       new_node(node_id, x, y, z);
 
     } else if (hm == ELEMENT) {
-      int elem_id, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10;
+      int elem_id, n[10];
 
       if (sscanf(line,
 		 "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-		 &elem_id, &n1, &n2, &n3, &n4, &n5, &n6, &n7, &n8, &n9, &n10)
+		 &elem_id, &n[0], &n[1], &n[2], &n[3], &n[4],
+		 &n[5], &n[6], &n[7], &n[8], &n[9])
 	  != 11) {
 	fprintf(stderr, "Error: reading element data failed\n");
 	exit(1);
       }
-      new_elem(elem_id, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10);
+      new_elem(elem_id, n);
 
     } else if (hm == EGROUP) {
 
