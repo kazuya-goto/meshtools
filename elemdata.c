@@ -30,7 +30,7 @@ void elem_finalize(void)
   free(elem_data);
 }
 
-void new_elem(int id, int n[])
+void new_elem(int id, int *n)
 {
   int i;
 
@@ -57,17 +57,6 @@ void new_elem(int id, int n[])
   n_elem++;
 }
 
-void print_elem_renum(FILE *fp)
-{
-  int i, j;
-  for (i = 0; i < n_elem; i++) {
-    fprintf(fp, " %d", elem_data[i].id);   /* = i ?? */
-    for (j = 0; j < 10; j++)
-      fprintf(fp, ", %d", get_new_node_id(elem_data[i].n[i]));
-    fprintf(fp, "\n");
-  }
-}
-
 int number_of_elems(void)
 {
   return n_elem;
@@ -76,7 +65,6 @@ int number_of_elems(void)
 void print_elem_adv(FILE *fp)
 {
   int i, j;
-  /* static int f2a[10] = {4, 2, 1, 3, 9, 8, 10, 7, 6, 5}; */
   static int f2a[10] = {3, 1, 0, 2, 8, 7, 9, 6, 5, 4};
 
   for (i = 0; i < n_elem; i++) {

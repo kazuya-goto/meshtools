@@ -10,10 +10,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <libgen.h>
-#include <sys/times.h>
-#include <unistd.h>
+#include <time.h>      /* for time() and ctime() */
+#include <libgen.h>    /* for basename(char *) */
+#include <sys/times.h> /* for times(struct tms *) */
+#include <unistd.h>    /* for sysconf() */
 #include "nodedata.h"
 #include "elemdata.h"
 
