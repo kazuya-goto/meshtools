@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libgen.h>
 
 #define MAXLEN 1024
 
@@ -25,7 +24,15 @@ int main(int argc, char **argv)
   int n_node = 0;
   int n_elem = 0;
 
-  progname = basename(argv[0]);
+  /* progname = basename(argv[0]); */
+  if ((progname = strrchr(argv[0], '/')) == NULL &&
+      (progname = strrchr(argv[0], '\\')) == NULL) {
+    fprintf(stderr, "strange path??\n");
+    progname = argv[0];
+  } else {
+    progname++;
+  }
+
   if (argc != 2) {
     fprintf(stderr,
 	    "%s: count the number of nodes and elements in FrontSTR mesh file\n"

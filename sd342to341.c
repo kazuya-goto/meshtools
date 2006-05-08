@@ -12,9 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <libgen.h>
-#include <sys/times.h>
-#include <unistd.h>
 #include "nodedata.h"
 
 #define MAXLEN 1024
@@ -36,16 +33,19 @@ int main(int argc, char **argv)
   char line[MAXLEN];
   enum header_mode hm = NONE;
 
-  struct tms before, after;
-  long cps;
   clock_t before_c, after_c;
-
-  times(&before);
-  cps = sysconf(_SC_CLK_TCK);
 
   before_c = clock();
 
-  progname = basename(argv[0]);
+  /* progname = basename(argv[0]); */
+  if ((progname = strrchr(argv[0], '/')) == NULL &&
+      (progname = strrchr(argv[0], '\\')) == NULL) {
+    fprintf(stderr, "strange path??\n");
+    progname = argv[0];
+  } else {
+    progname++;
+  }
+
   if (argc != 3) {
     fprintf(stderr,
 	    "%s: Subdevide FrontSTR-format 342 mesh data into 341 mesh data\n"
@@ -249,14 +249,6 @@ int main(int argc, char **argv)
   fclose(to_file);
 
   print_log(log_file, "mesh-type conversion completed.");
-
-  times(&after);
-  fprintf(log_file, "  User time: %.2f sec\n",
-          ((double) (after.tms_utime + after.tms_cutime)
-           - (before.tms_utime + before.tms_cutime)) / (double) cps);
-  fprintf(log_file, "System time: %.2f sec\n",
-          ((double) (after.tms_stime + after.tms_cstime)
-           - (before.tms_stime + before.tms_cstime)) / (double) cps);
 
   after_c = clock();
   fprintf(log_file, " Total time: %.2f sec\n",
