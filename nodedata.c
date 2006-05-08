@@ -11,7 +11,7 @@
 #include <math.h>
 #include "nodedata.h"
 
-typedef struct _NodeData {
+typedef struct NodeData {
   int id;
   double x;
   double y;
@@ -34,7 +34,6 @@ void node_init(void)
     perror("node_init");
     exit(1);
   }
-
   max_node = MAX_NODE_INIT;
 }
 

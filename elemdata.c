@@ -3,7 +3,7 @@
 #include "elemdata.h"
 #include "nodedata.h"
 
-typedef struct _ElemData342 {
+typedef struct ElemData342 {
   int id;
   int n[10];
 } ElemData342;
@@ -17,7 +17,7 @@ static int max_elem;
 
 void elem_init(void)
 {
-  elem_data = (ElemData342 *) malloc(max_elem * sizeof(ElemData342));
+  elem_data = (ElemData342 *) malloc(MAX_ELEM_INIT * sizeof(ElemData342));
   if (elem_data == NULL) {
     perror("elem_init");
     exit(1);

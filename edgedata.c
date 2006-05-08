@@ -11,19 +11,19 @@
 #include "nodedata.h"
 #include "edgedata.h"
 
-typedef struct _Edge {
+typedef struct Edge {
   int onid; /* node id of the other end of the edge */
   int mnid; /* node id of the middle node */
 } Edge;
 
-typedef struct _EdgeData {
+typedef struct EdgeData {
   int nid;
   int n_edge;  /* number of edges */
   int max_edge;
   Edge *edge; /* edge detail */
 } EdgeData;
 
-enum { MAX_EDGE_INIT = 0, MAX_EDGE_GROW = 8 };
+enum { MAX_EDGE_INIT = 8, MAX_EDGE_GROW = 8 };
 
 static int n_node_init;
 static EdgeData *edge_data;
