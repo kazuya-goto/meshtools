@@ -27,6 +27,8 @@ static int n_mnode = 0;
 static NodeData *node_data;
 static int max_node;
 
+static int issorted = 1;
+
 void node_init(void)
 {
   node_data = (NodeData *) malloc(MAX_NODE_INIT * sizeof(NodeData));
@@ -58,8 +60,8 @@ void new_node(int id, double x, double y, double z)
   }
 
   if (n_node > 0 && node_data[n_node-1].id >= id) {
-    fprintf(stderr, "Error: node id is not sorted\n");
-    exit(1);
+    fprintf(stderr, "Warning: node id is not sorted\n");
+    issorted = 0;
   }
 
   node_data[n_node].id = id;
@@ -84,19 +86,15 @@ static int node_compar(const void *vn1, const void *vn2)
 
 static NodeData *search_node(int i1)
 {
-#ifdef DEBUG
-  static int call = 0;
-#endif
   NodeData node1, *n1p;
 
-#ifdef DEBUG
-  if (call == 0) {
+  if (!issorted) {
     fprintf(stderr, "start sorting node data... ");
     qsort(node_data, n_node, sizeof(NodeData), node_compar);
     fprintf(stderr, "done.\n");
-    call++;
+    issorted = 1;
   }
-#endif
+
   node1.id = i1;
   n1p = bsearch(&node1, node_data, n_node, sizeof(NodeData), node_compar);
   if (n1p == NULL) {
@@ -131,18 +129,14 @@ int number_of_middle_nodes(void)
 
 int get_local_node_id(int i1)
 {
-  NodeData *n1p;
   int li1;
-
-  n1p = search_node(i1);
-  li1 = n1p - node_data;
-#ifdef DEBUG
-  if (n1p->id != node_data[li1].id) {
-    fprintf(stderr, "Error: (n1p->id = %d) != (node_data[%d].id = %d)\n",
-	    n1p->id, li1, node_data[li1].id);
+  li1 = search_node(i1) - node_data;
+  if (node_data[li1].id != i1) {
+    fprintf(stderr, "Error: failed get_local_node_id; "
+	    "(node_data[%d].id = %d) != (i1 = %d)\n",
+	    li1, node_data[li1].id, i1);
     exit(1);
   }
-#endif
   return li1;
 }
 
@@ -168,21 +162,6 @@ int new_middle_node(int i1, int i2)
   return mnid;
 }
 
-char *node_data_line(char *line, int maxlen, int i1)
-{
-  NodeData *n1p;
-  int rv;
-
-  n1p = search_node(i1);
-  rv = snprintf(line, maxlen, " %d, %f, %f, %f",
-		n1p->id, n1p->x, n1p->y, n1p->z);
-  if (rv >= maxlen || rv <  0) {
-    fprintf(stderr, "Error: too short buffer; please use longer one.\n");
-    exit(1);
-  }
-  return line;
-}
-
 char *last_node_data_line(char *line, int maxlen)
 {
   NodeData *n1p;
@@ -192,7 +171,7 @@ char *last_node_data_line(char *line, int maxlen)
   rv = snprintf(line, maxlen, " %d, %f, %f, %f",
 		n1p->id, n1p->x, n1p->y, n1p->z);
   if (rv >= maxlen || rv <  0) {
-    fprintf(stderr, "Error: too short buffer; please use longer one.\n");
+    fprintf(stderr, "Error: too short buffer; use longer one.\n");
     exit(1);
   }
   return line;

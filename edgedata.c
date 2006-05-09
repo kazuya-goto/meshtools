@@ -18,9 +18,13 @@ typedef struct Edge {
 
 typedef struct EdgeData {
   int nid;
-  int n_edge;  /* number of edges */
-  int max_edge;
+  int n_edge;  /* number of edges to nodes with greater node-ID *
+		* these nodes are recorded in edge[].           */
+  int n_edge_s; /* number of edges to nodes with smaller node-ID *
+		 * these nodes are not recorded.                 */
   Edge *edge; /* edge detail */
+  int max_edge; /* allocated length of edge[] */
+
 } EdgeData;
 
 enum { MAX_EDGE_INIT = 8, MAX_EDGE_GROW = 8 };
@@ -47,12 +51,13 @@ void edge_init(void)
   for (i = 0; i < n_node_init; i++) {
     edge_data[i].nid = get_global_node_id(i);
     edge_data[i].n_edge = 0;
-    edge_data[i].max_edge = MAX_EDGE_INIT;
+    edge_data[i].n_edge_s = 0;
     edge_data[i].edge = (Edge *) malloc(MAX_EDGE_INIT * sizeof(Edge));
     if (edge_data[i].edge == NULL) {
       perror("edge_init");
       exit(1);
     }
+    edge_data[i].max_edge = MAX_EDGE_INIT;
   }
 }
 
@@ -68,7 +73,7 @@ void edge_finalize(void)
 
 int middle_node(int i1, int i2, int *mnidp)
 {
-  int li1;
+  int li1, li2;
   EdgeData *edp;
   Edge *ep;
   int j;
@@ -114,25 +119,30 @@ int middle_node(int i1, int i2, int *mnidp)
   ep->mnid = new_middle_node(i1, i2);
   edp->n_edge++;
 
+  li2 = get_local_node_id(i2);
+  edge_data[li2].n_edge_s++;
+
   *mnidp = ep->mnid;
   return 1;
 }
 
 void print_edge_stat(FILE *log_file)
 {
+  int neg, ne;
   int min, max;
-  int sum = 0;
+  int sum = 0, sumg = 0;
   int n_node_actv = 0;
   double avr;
   int sum_max = 0;
   int i;
 
   for (i = 0; i < n_node_init; i++) {
-    int ne = edge_data[i].n_edge;
+    neg = edge_data[i].n_edge;
+    ne = neg + edge_data[i].n_edge_s;
 
 #ifdef DEBUG
-    fprintf(log_file, "%d: %d / %d\n",
-	    edge_data[i].nid, ne, edge_data[i].max_edge);
+    fprintf(log_file, "%d: %d ( %d / %d )\n",
+	    edge_data[i].nid, ne, neg, edge_data[i].max_edge);
 #endif
     sum_max += edge_data[i].max_edge;
 
@@ -145,6 +155,7 @@ void print_edge_stat(FILE *log_file)
       if (ne > max) max = ne;
     }
     sum += ne;
+    sumg += neg;
     n_node_actv++;
   }
 
@@ -159,5 +170,5 @@ void print_edge_stat(FILE *log_file)
 	  "             average number of edges : %f\n"
 	  "                used / allocated (%%) : %d / %d (%f%%)\n",
 	  n_node_init, n_node_actv, number_of_middle_nodes(), min, max, avr,
-	  sum, sum_max, 100.0*(double)sum/(double)sum_max);
+	  sumg, sum_max, 100.0*(double)sumg/(double)sum_max);
 }

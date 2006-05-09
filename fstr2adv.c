@@ -21,7 +21,7 @@ enum header_mode {NONE, HEADER, NODE, ELEMENT, EGROUP, OTHER};
 static void print_log(FILE *log_file, char *log_mesg);
 
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
   char *progname;
   char logname[64];
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
   fprintf(log_file, " Total time: %.2f sec\n",
 	  (double) (after_c - before_c) / (double) CLOCKS_PER_SEC);
 
-  exit(0);
+  return 0;
 }
 
 

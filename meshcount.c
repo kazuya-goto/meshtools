@@ -15,7 +15,7 @@
 
 enum header_mode {NONE, HEADER, NODE, ELEMENT, EGROUP, OTHER};
 
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
   char *progname;
   FILE *mesh_file;
@@ -85,5 +85,5 @@ int main(int argc, char **argv)
 
   fclose(mesh_file);
   printf("%d nodes, %d elements\n", n_node, n_elem);
-  exit(0);
+  return 0;
 }
