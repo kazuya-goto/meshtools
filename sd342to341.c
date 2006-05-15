@@ -5,7 +5,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 10, 2006
- * Last modified on Mar 17, 2006
+ * Last modified on May 16, 2006
  *
  */
 #include <stdio.h>
@@ -32,6 +32,9 @@ int main(int argc, char *argv[])
 
   char line[MAXLEN];
   enum header_mode hm = NONE;
+
+  double armin = 1e+10; /* min of aspect ratio */
+  double armax = 0;     /* max of aspect ratio */
 
   clock_t before_c, after_c;
 
@@ -166,7 +169,7 @@ int main(int argc, char *argv[])
 
     } else if (hm == ELEMENT) {
       int elem_id, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10;
-      double ndist58, ndist69, ndist710;
+      double ndist58, ndist69, ndist710, ar;
 
       if (sscanf(line,
 		 "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
@@ -197,10 +200,10 @@ int main(int argc, char *argv[])
 		8*elem_id-2, n5, n8, n7, n9,
 		8*elem_id-1, n5, n8, n9, n10,
 		8*elem_id, n5, n8, n10, n6);
-#ifdef DEBUG
-	if (ndist69 < ndist710) fprintf(log_file, "%f\n", ndist710/ndist58);
-	else fprintf(log_file, "%f\n", ndist69/ndist58);
-#endif
+	if (ndist69 < ndist710)
+	  ar = ndist710/ndist58;
+	else
+	  ar = ndist69/ndist58;
       } else if (ndist69 < ndist710) {
 	fprintf(to_file, " %d, %d, %d, %d, %d\n"
 		" %d, %d, %d, %d, %d\n"
@@ -210,10 +213,10 @@ int main(int argc, char *argv[])
 		8*elem_id-2, n6, n9, n5, n10,
 		8*elem_id-1, n6, n9, n10, n8,
 		8*elem_id, n6, n9, n8, n7);
-#ifdef DEBUG
-	if (ndist58 < ndist710) fprintf(log_file, "%f\n", ndist710/ndist69);
-	else fprintf(log_file, "%f\n", ndist58/ndist69);
-#endif
+	if (ndist58 < ndist710)
+	  ar = ndist710/ndist69;
+	else
+	  ar = ndist58/ndist69;
       } else {
 	fprintf(to_file, " %d, %d, %d, %d, %d\n"
 		" %d, %d, %d, %d, %d\n"
@@ -223,11 +226,13 @@ int main(int argc, char *argv[])
 		8*elem_id-2, n7, n10, n6, n8,
 		8*elem_id-1, n7, n10, n8, n9,
 		8*elem_id, n7, n10, n9, n5);
-#ifdef DEBUG
-	if (ndist58 < ndist69) fprintf(log_file, "%f\n", ndist69/ndist710);
-	else fprintf(log_file, "%f\n", ndist58/ndist710);
-#endif
+	if (ndist58 < ndist69)
+	  ar = ndist69/ndist710;
+	else
+	  ar = ndist58/ndist710;
       }
+      if (ar < armin) armin = ar;
+      if (ar > armax) armax = ar;
 
     } else if (hm == EGROUP) {
       int elem_id;
@@ -248,6 +253,7 @@ int main(int argc, char *argv[])
   fclose(from_file);
   fclose(to_file);
 
+  fprintf(log_file, "aspect ratio: min = %f, max = %f\n", armin, armax);
   print_log(log_file, "mesh-type conversion completed.");
 
   after_c = clock();

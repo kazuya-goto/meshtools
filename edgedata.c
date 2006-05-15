@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified: Mar 17, 2006
+ * Last modified: May 16, 2006
  *
  */
 #include <stdio.h>
@@ -140,10 +140,10 @@ void print_edge_stat(FILE *log_file)
     neg = edge_data[i].n_edge;
     ne = neg + edge_data[i].n_edge_s;
 
-#ifdef DEBUG
+    /* for debugging...
     fprintf(log_file, "%d: %d ( %d / %d )\n",
 	    edge_data[i].nid, ne, neg, edge_data[i].max_edge);
-#endif
+    */
     sum_max += edge_data[i].max_edge;
 
     if (ne == 0) continue;

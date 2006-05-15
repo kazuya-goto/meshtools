@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last Modified: Mar 15, 2006
+ * Last Modified: May 9, 2006
  *
  */
 #include <stdio.h>
@@ -26,7 +26,6 @@ static int n_mnode = 0;
 
 static NodeData *node_data;
 static int max_node;
-
 static int issorted = 1;
 
 void node_init(void)

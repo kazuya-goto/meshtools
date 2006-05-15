@@ -4,7 +4,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified on Mar 17, 2006
+ * Last modified on May 16, 2006
  *
  */
 #include <stdio.h>
@@ -33,9 +33,7 @@ int main(int argc, char *argv[])
 
   char line[MAXLEN];
   enum header_mode hm = NONE;
-#ifdef DEBUG
-  char tmpname[64];
-#endif
+  /* char tmpname[64]; */ /* for debugging */
 
   clock_t before_c, after_c;
 
@@ -79,13 +77,13 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-#ifdef DEBUG
+  tmp_file = tmpfile();
+  /* for debugging...
   strcpy(tmpname, progname);
   strcat(tmpname, ".tmp");
   tmp_file = fopen(tmpname, "w+");
-#else
-  tmp_file = tmpfile();
-#endif
+  */
+
   if (tmp_file == NULL) {
     perror("tmpfile");
     exit(1);
