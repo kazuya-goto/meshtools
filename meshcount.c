@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     progname++;
   }
 
-  if (argc != 2) {
+  if (argc > 2) {
     fprintf(stderr,
 	    "%s: count the number of nodes and elements in FrontSTR mesh file\n"
 	    "Usage: %s mesh_file\n",
@@ -39,10 +39,14 @@ int main(int argc, char *argv[])
     exit(1);
   }
 
-  mesh_file = fopen(argv[1], "r");
-  if (mesh_file == NULL) {
-    perror(argv[1]);
-    exit(2);
+  if (argc == 2) {
+    mesh_file = fopen(argv[1], "r");
+    if (mesh_file == NULL) {
+      perror(argv[1]);
+      exit(2);
+    }
+  } else {
+    mesh_file = stdin;
   }
 
   meshio_init(mesh_file);
@@ -63,7 +67,7 @@ int main(int argc, char *argv[])
   }
 
   meshio_finalize();
-  fclose(mesh_file);
+  if (mesh_file != stdin) fclose(mesh_file);
   printf("%d nodes, %d elements\n", n_node, n_elem);
   return 0;
 }

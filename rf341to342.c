@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
   FILE *log_file;
 
   FILE *from_file;
+  char from_file_name[64];
   FILE *to_file;
   /* char tmpname[64]; */ /* for debugging */
   FILE *tmp_file;
@@ -48,7 +49,7 @@ int main(int argc, char *argv[])
     progname++;
   }
 
-  if (argc != 3) {
+  if (argc > 3) {
     fprintf(stderr,
 	    "%s: Refine FrontSTR-format 341 mesh data into 342 mesh data\n"
 	    "Usage: %s from_file to_file\n",
@@ -65,16 +66,26 @@ int main(int argc, char *argv[])
   }
   print_log(log_file, "Starting mesh-type conversion...");
 
-  from_file = fopen(argv[1], "r");
-  if (from_file == NULL) {
-    perror(argv[1]);
-    exit(2);
+  if (argc >= 2) {
+    from_file = fopen(argv[1], "r");
+    if (from_file == NULL) {
+      perror(argv[1]);
+      exit(2);
+    }
+    strcpy(from_file_name, argv[1]);
+  } else {
+    from_file = stdin;
+    strcpy(from_file_name, "stdin");
   }
 
-  to_file = fopen(argv[2], "w");
-  if (to_file == NULL) {
-    perror(argv[2]);
-    exit(2);
+  if (argc == 3) {
+    to_file = fopen(argv[2], "w");
+    if (to_file == NULL) {
+      perror(argv[2]);
+      exit(2);
+    }
+  } else {
+    to_file = stdout;
   }
 
   tmp_file = tmpfile();
@@ -97,7 +108,7 @@ int main(int argc, char *argv[])
 	    "# Date: %s"
 	    "# Original: %s\n"
 	    "##############################################################\n",
-	    progname, ctime(&t), argv[1]);
+	    progname, ctime(&t), from_file_name);
   }
 
   meshio_init(from_file);
@@ -212,8 +223,8 @@ int main(int argc, char *argv[])
   meshio_finalize();
 
   fclose(tmp_file);
-  fclose(from_file);
-  fclose(to_file);
+  if (from_file != stdin) fclose(from_file);
+  if (to_file != stdout) fclose(to_file);
 
   print_log(log_file, "mesh-type conversion completed.");
 

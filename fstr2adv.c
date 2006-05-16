@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     progname++;
   }
 
-  if (argc != 3) {
+  if (argc > 3) {
     fprintf(stderr,
 	    "%s: Convert FrontSTR-format mesh file into Adventure mesh file\n"
 	    "Usage: %s from_file to_file\n",
@@ -61,10 +61,14 @@ int main(int argc, char *argv[])
   }
   print_log(log_file, "Starting mesh-type conversion...");
 
-  from_file = fopen(argv[1], "r");
-  if (from_file == NULL) {
-    perror(argv[1]);
-    exit(2);
+  if (argc >= 2) {
+    from_file = fopen(argv[1], "r");
+    if (from_file == NULL) {
+      perror(argv[1]);
+      exit(2);
+    }
+  } else {
+    from_file = stdin;
   }
 
   meshio_init(from_file);
@@ -135,12 +139,16 @@ int main(int argc, char *argv[])
   }
 
   meshio_finalize();
-  fclose(from_file);
+  if (from_file != stdin) fclose(from_file);
 
-  to_file = fopen(argv[2], "w");
-  if (to_file == NULL) {
-    perror(argv[2]);
-    exit(2);
+  if (argc == 3) {
+    to_file = fopen(argv[2], "w");
+    if (to_file == NULL) {
+      perror(argv[2]);
+      exit(2);
+    }
+  } else {
+    to_file = stdout;
   }
 
   fprintf(to_file, "%d\n", number_of_elems());
@@ -151,7 +159,7 @@ int main(int argc, char *argv[])
 
   node_finalize();
   elem_finalize();
-  fclose(to_file);
+  if (to_file != stdout) fclose(to_file);
 
   print_log(log_file, "mesh-type conversion completed.");
 
