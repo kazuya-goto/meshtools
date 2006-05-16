@@ -19,8 +19,8 @@ void elem_init(void)
 {
   elem_data = (ElemData342 *) malloc(MAX_ELEM_INIT * sizeof(ElemData342));
   if (elem_data == NULL) {
-    perror("elem_init");
-    exit(1);
+    perror("in elem_init()");
+    exit(2);
   }
   max_elem = MAX_ELEM_INIT;
 }
@@ -39,8 +39,8 @@ void new_elem(int id, int *n)
 
     edp = (ElemData342 *) realloc(elem_data, MAX_ELEM_GROW * max_elem * sizeof(ElemData342));
     if (edp == NULL) {
-      perror("new_elem");
-      exit(1);
+      perror("in new_elem()");
+      exit(2);
     }
     max_elem *= MAX_ELEM_GROW;
     elem_data = edp;

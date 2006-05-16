@@ -44,8 +44,8 @@ void edge_init(void)
 
   edge_data = (EdgeData *) malloc(n_node_init * sizeof(EdgeData));
   if (edge_data == NULL) {
-    perror("edge_init");
-    exit(1);
+    perror("in edge_init()");
+    exit(2);
   }
 
   for (i = 0; i < n_node_init; i++) {
@@ -54,8 +54,8 @@ void edge_init(void)
     edge_data[i].n_edge_s = 0;
     edge_data[i].edge = (Edge *) malloc(MAX_EDGE_INIT * sizeof(Edge));
     if (edge_data[i].edge == NULL) {
-      perror("edge_init");
-      exit(1);
+      perror("in edge_init()");
+      exit(2);
     }
     edge_data[i].max_edge = MAX_EDGE_INIT;
   }
@@ -105,8 +105,8 @@ int middle_node(int i1, int i2, int *mnidp)
 
     ep = (Edge *) realloc(edp->edge, (edp->max_edge + MAX_EDGE_GROW) * sizeof(Edge));
     if (ep == NULL) {
-      perror("new_edge");
-      exit(1);
+      perror("in middle_node()");
+      exit(2);
     }
     edp->max_edge += MAX_EDGE_GROW;
     edp->edge = ep;

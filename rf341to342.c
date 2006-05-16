@@ -11,12 +11,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "meshio.h"
 #include "nodedata.h"
 #include "edgedata.h"
 
-#define MAXLEN 1024
-
-enum header_mode {NONE, HEADER, NODE, ELEMENT, EGROUP, OTHER};
+#define BUFSIZE 1024
 
 static void print_log(FILE *log_file, char *log_mesg);
 
@@ -29,11 +28,12 @@ int main(int argc, char *argv[])
 
   FILE *from_file;
   FILE *to_file;
+  /* char tmpname[64]; */ /* for debugging */
   FILE *tmp_file;
 
-  char line[MAXLEN];
-  enum header_mode hm = NONE;
-  /* char tmpname[64]; */ /* for debugging */
+  char *line;
+  int mode;
+  int header, header_prev = NONE;
 
   clock_t before_c, after_c;
 
@@ -61,20 +61,20 @@ int main(int argc, char *argv[])
   log_file = fopen(logname, "w");
   if (log_file == NULL) {
     perror(logname);
-    exit(1);
+    exit(2);
   }
   print_log(log_file, "Starting mesh-type conversion...");
 
   from_file = fopen(argv[1], "r");
   if (from_file == NULL) {
     perror(argv[1]);
-    exit(1);
+    exit(2);
   }
 
   to_file = fopen(argv[2], "w");
   if (to_file == NULL) {
     perror(argv[2]);
-    exit(1);
+    exit(2);
   }
 
   tmp_file = tmpfile();
@@ -83,10 +83,9 @@ int main(int argc, char *argv[])
   strcat(tmpname, ".tmp");
   tmp_file = fopen(tmpname, "w+");
   */
-
   if (tmp_file == NULL) {
     perror("tmpfile");
-    exit(1);
+    exit(2);
   }
 
   {
@@ -101,97 +100,82 @@ int main(int argc, char *argv[])
 	    progname, ctime(&t), argv[1]);
   }
 
-  while (fgets(line, MAXLEN, from_file)) {
-    /* remove '\n' at the end of line */
-    line[strlen(line)-1] = '\0';
+  meshio_init(from_file);
+  node_init();
 
-    /* skip comments */
-    if (line[0] == '#' ||
-	(line[0] == '!' && line[1] == '!')) {
-      fprintf(to_file, "%s\n", line);
+  while ((line = meshio_readline(&mode, &header)) != NULL) {
+
+    if (mode == COMMENT) {
+      fprintf(to_file, "%s", line);
       continue;
     }
 
-    /* header lines */
-    if (line[0] == '!') {
-      char *header = line+1;
-      while (header[0] == ' ') header++;
-
-      /* check the previous header mode */
-      if (hm == NODE) {
+    if (mode == HEADER) {
+      /* check the previous header */
+      if (header_prev == NODE && header != NODE) {
 	print_log(log_file, "reading NODE-part completed.");
 
-      } else if (hm == ELEMENT) { /* reading ELEMENT completed! */
-	char tmpbuf[MAXLEN];
+	edge_init();
+
+      } else if (header_prev == ELEMENT && header != ELEMENT) {
+	char tmpbuf[BUFSIZE];
 
 	print_log(log_file, "reading ELEMENT-part completed.");
 	print_edge_stat(log_file);
 
-	edge_finalize();
-	node_finalize();
-
 	/* copy tmp_file to to_file */
 	print_log(log_file, "Copying element data... ");
 	rewind(tmp_file);
-	while (fgets(tmpbuf, MAXLEN, tmp_file)) {
+	while (fgets(tmpbuf, sizeof(tmpbuf), tmp_file))
 	  fputs(tmpbuf, to_file);
-	}
-	fclose(tmp_file);
 	print_log(log_file, "done.");
       }
 
       /* check the current header */
-      if (strncmp(header, "NODE", 4) == 0) {
-	print_log(log_file, "Start reading NODE-part...");
-	hm = NODE;
-	node_init();
-	fprintf(to_file, "%s\n", line);
+      if (header == NODE) {
+	if (header_prev != NODE)
+	  print_log(log_file, "Start reading NODE-part...");
+	fprintf(to_file, "%s", line);
 
-      } else if (strncmp(header, "ELEMENT", 7) == 0) {
+      } else if (header == ELEMENT) {
 	char *p_elem_type;
-
-	print_log(log_file, "Start reading ELEMENT-part...");
-	hm = ELEMENT;
-	p_elem_type = strstr(header, "341");
+	if (header_prev != ELEMENT)
+	  print_log(log_file, "Start reading ELEMENT-part...");
+	p_elem_type = strstr(line, "341");
 	if (p_elem_type == NULL) {
 	  fprintf(stderr, "Error: element type is not \"341\"?\n");
-	  exit(4);
+	  exit(1);
 	}
 	p_elem_type[2] = '2';
-	edge_init();
-	fprintf(tmp_file, "%s\n", line);
-
-      } else if (strncmp(header, "EGROUP", 6) == 0) {
-	hm = EGROUP;
-	fprintf(to_file, "%s\n", line);
+	fprintf(tmp_file, "%s", line);
 
       } else {
-	hm = OTHER;
-	fprintf(to_file, "%s\n", line);
+	fprintf(to_file, "%s", line);
       }
+      header_prev = header;
       continue;
     }
 
-    /* data lines */
-    if (hm == NONE) {
+    /* now mode==DATA */
+    if (header == NONE) {
       fprintf(stderr,
 	      "Error: unknown file format (no header before data line)\n");
-      exit(5);
+      exit(1);
     }
 
-    if (hm == NODE) {
+    if (header == NODE) {
       int node_id;
       double x, y, z;
 
       if (sscanf(line, "%d,%lf,%lf,%lf", &node_id, &x, &y, &z) != 4) {
 	fprintf(stderr, "Error: reading node data failed\n");
-	exit(6);
+	exit(1);
       }
       new_node(node_id, x, y, z);
 
-      fprintf(to_file, "%s\n", line);
+      fprintf(to_file, "%s", line);
 
-    } else if (hm == ELEMENT) {
+    } else if (header == ELEMENT) {
       int elem_id, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, dummy;
 
       if (sscanf(line,
@@ -199,30 +183,35 @@ int main(int argc, char *argv[])
 		 &elem_id, &n1, &n2, &n3, &n4, &dummy)
 	  != 5) {
 	fprintf(stderr, "Error: reading element data failed\n");
-	exit(7);
+	exit(1);
       }
 
       if (middle_node(n2, n3, &n5))
-	fprintf(to_file, "%s\n", last_node_data_line(line, MAXLEN));
+	print_last_node_data_line(to_file);
       if (middle_node(n1, n3, &n6))
-	fprintf(to_file, "%s\n", last_node_data_line(line, MAXLEN));
+	print_last_node_data_line(to_file);
       if (middle_node(n1, n2, &n7))
-	fprintf(to_file, "%s\n", last_node_data_line(line, MAXLEN));
+	print_last_node_data_line(to_file);
       if (middle_node(n1, n4, &n8))
-	fprintf(to_file, "%s\n", last_node_data_line(line, MAXLEN));
+	print_last_node_data_line(to_file);
       if (middle_node(n2, n4, &n9))
-	fprintf(to_file, "%s\n", last_node_data_line(line, MAXLEN));
+	print_last_node_data_line(to_file);
       if (middle_node(n3, n4, &n10))
-	fprintf(to_file, "%s\n", last_node_data_line(line, MAXLEN));
+	print_last_node_data_line(to_file);
 
       fprintf(tmp_file, " %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
 	      elem_id, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10);
 
     } else {
-      fprintf(to_file, "%s\n", line);
+      fprintf(to_file, "%s", line);
     }
   }
 
+  edge_finalize();
+  node_finalize();
+  meshio_finalize();
+
+  fclose(tmp_file);
   fclose(from_file);
   fclose(to_file);
 
@@ -232,6 +221,7 @@ int main(int argc, char *argv[])
   fprintf(log_file, " Total time: %.2f sec\n",
 	  (double) (after_c - before_c) / (double) CLOCKS_PER_SEC);
 
+  fclose(log_file);
   return 0;
 }
 

@@ -4,23 +4,21 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 15, 2006
- * Last modified on May 9, 2006
+ * Last modified on May 16, 2006
  *
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define MAXLEN 1024
-
-enum header_mode {NONE, HEADER, NODE, ELEMENT, EGROUP, OTHER};
+#include "meshio.h"
 
 int main(int argc, char *argv[])
 {
   char *progname;
   FILE *mesh_file;
-  char line[MAXLEN];
-  enum header_mode hm = NONE;
+  char *line;
+  int mode;
+  int header;
   int n_node = 0;
   int n_elem = 0;
 
@@ -44,45 +42,27 @@ int main(int argc, char *argv[])
   mesh_file = fopen(argv[1], "r");
   if (mesh_file == NULL) {
     perror(argv[1]);
-    exit(1);
+    exit(2);
   }
 
-  while (fgets(line, MAXLEN, mesh_file)) {
+  meshio_init(mesh_file);
 
-    /* skip comments */
-    if (line[0] == '#' ||
-	(line[0] == '!' && line[1] == '!'))
-      continue;
+  while ((line = meshio_readline(&mode, &header)) != NULL) {
 
-    /* header lines */
-    if (line[0] == '!') {
-      char *header = line+1;
-      while (header[0] == ' ') header++;
+    if (mode == COMMENT) continue;
+    if (mode == HEADER) continue;
 
-      if (strncmp(header, "NODE", 4) == 0)
-	hm = NODE;
-      else if (strncmp(header, "ELEMENT", 7) == 0)
-	hm = ELEMENT;
-      else if (strncmp(header, "EGROUP", 6) == 0)
-	hm = EGROUP;
-      else
-	hm = OTHER;
-
-      continue;
-    }
-
-    /* data lines */
-    if (hm == NONE) {
+    /* now mode==DATA */
+    if (header == NONE) {
       fprintf(stderr,
 	      "Error: unknown file format (no header before data line)\n");
       exit(1);
     }
-    if (hm == NODE)
-      n_node++;
-    else if (hm == ELEMENT)
-      n_elem++;
+    if (header == NODE) n_node++;
+    else if (header == ELEMENT) n_elem++;
   }
 
+  meshio_finalize();
   fclose(mesh_file);
   printf("%d nodes, %d elements\n", n_node, n_elem);
   return 0;

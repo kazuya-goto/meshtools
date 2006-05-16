@@ -12,11 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "meshio.h"
 #include "nodedata.h"
-
-#define MAXLEN 1024
-
-enum header_mode {NONE, HEADER, NODE, ELEMENT, EGROUP, OTHER};
 
 static void print_log(FILE *log_file, char *log_mesg);
 
@@ -30,8 +27,9 @@ int main(int argc, char *argv[])
   FILE *from_file;
   FILE *to_file;
 
-  char line[MAXLEN];
-  enum header_mode hm = NONE;
+  char *line;
+  int mode;
+  int header, header_prev = NONE;
 
   double armin = 1e+10; /* min of aspect ratio */
   double armax = 0;     /* max of aspect ratio */
@@ -63,20 +61,20 @@ int main(int argc, char *argv[])
   log_file = fopen(logname, "w");
   if (log_file == NULL) {
     perror(logname);
-    exit(1);
+    exit(2);
   }
   print_log(log_file, "Starting mesh-type conversion...");
 
   from_file = fopen(argv[1], "r");
   if (from_file == NULL) {
     perror(argv[1]);
-    exit(1);
+    exit(2);
   }
 
   to_file = fopen(argv[2], "w");
   if (to_file == NULL) {
     perror(argv[2]);
-    exit(1);
+    exit(2);
   }
 
   {
@@ -91,71 +89,56 @@ int main(int argc, char *argv[])
 	    progname, ctime(&t), argv[1]);
   }
 
-  while (fgets(line, MAXLEN, from_file)) {
-    /* remove '\n' at the end of line */
-    line[strlen(line)-1] = '\0';
+  meshio_init(from_file);
+  node_init();
 
-    /* skip comments */
-    if (line[0] == '#' ||
-	(line[0] == '!' && line[1] == '!')) {
-      fprintf(to_file, "%s\n", line);
+  while ((line = meshio_readline(&mode, &header)) != NULL) {
+
+    if (mode == COMMENT) {
+      fprintf(to_file, "%s", line);
       continue;
     }
 
-    /* header lines */
-    if (line[0] == '!') {
-      char *header = line+1;
-      while (header[0] == ' ') header++;
-
-
-      /* check the previous header mode */
-      if (hm == NODE) {
+    if (mode == HEADER) {
+      /* check the previous header */
+      if (header_prev == NODE && header != NODE)
         print_log(log_file, "reading NODE-part completed.");
-
-      } else if (hm == ELEMENT) { /* reading ELEMENT completed! */
+      else if (header_prev == ELEMENT && header != ELEMENT)
         print_log(log_file, "reading ELEMENT-part completed.");
-        node_finalize();
-      }
 
       /* check the current header */
-      if (strncmp(header, "NODE", 4) == 0) {
-        print_log(log_file, "Start reading NODE-part...");
-	hm = NODE;
-	node_init();
-	fprintf(to_file, "%s\n", line);
+      if (header == NODE) {
+	if (header_prev != NODE)
+	  print_log(log_file, "Start reading NODE-part...");
+	fprintf(to_file, "%s", line);
 
-      } else if (strncmp(header, "ELEMENT", 7) == 0) {
+      } else if (header == ELEMENT) {
 	char *p_elem_type;
-
-        print_log(log_file, "Start reading ELEMENT-part...");
-	hm = ELEMENT;
-	p_elem_type = strstr(header, "342");
+	if (header_prev != ELEMENT)
+	  print_log(log_file, "Start reading ELEMENT-part...");
+	p_elem_type = strstr(line, "342");
 	if (p_elem_type == NULL) {
 	  fprintf(stderr, "Error: element type is not \"342\"?\n");
 	  exit(1);
 	}
 	p_elem_type[2] = '1';
-	fprintf(to_file, "%s\n", line);
-
-      } else if (strncmp(header, "EGROUP", 6) == 0) {
-	hm = EGROUP;
-	fprintf(to_file, "%s\n", line);
+	fprintf(to_file, "%s", line);
 
       } else {
-	hm = OTHER;
-	fprintf(to_file, "%s\n", line);
+	fprintf(to_file, "%s", line);
       }
+      header_prev = header;
       continue;
     }
 
-    /* data lines */
-    if (hm == NONE) {
+    /* now mode==DATA */
+    if (header == NONE) {
       fprintf(stderr,
 	      "Error: unknown file format (no header before data line)\n");
       exit(1);
     }
 
-    if (hm == NODE) {
+    if (header == NODE) {
       int node_id;
       double x, y, z;
 
@@ -165,9 +148,9 @@ int main(int argc, char *argv[])
       }
       new_node(node_id, x, y, z);
 
-      fprintf(to_file, "%s\n", line);
+      fprintf(to_file, "%s", line);
 
-    } else if (hm == ELEMENT) {
+    } else if (header == ELEMENT) {
       int elem_id, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10;
       double ndist58, ndist69, ndist710, ar;
 
@@ -234,7 +217,7 @@ int main(int argc, char *argv[])
       if (ar < armin) armin = ar;
       if (ar > armax) armax = ar;
 
-    } else if (hm == EGROUP) {
+    } else if (header == EGROUP) {
       int elem_id;
 
       if (sscanf(line, "%d", &elem_id) != 1) {
@@ -246,9 +229,12 @@ int main(int argc, char *argv[])
 	      8*elem_id-3, 8*elem_id-2, 8*elem_id-1, 8*elem_id);
 
     } else {
-      fprintf(to_file, "%s\n", line);
+      fprintf(to_file, "%s", line);
     }
   }
+
+  node_finalize();
+  meshio_finalize();
 
   fclose(from_file);
   fclose(to_file);
@@ -260,6 +246,7 @@ int main(int argc, char *argv[])
   fprintf(log_file, " Total time: %.2f sec\n",
 	  (double) (after_c - before_c) / (double) CLOCKS_PER_SEC);
 
+  fclose(log_file);
   return 0;
 }
 

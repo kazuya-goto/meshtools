@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last Modified: May 9, 2006
+ * Last Modified: May 16, 2006
  *
  */
 #include <stdio.h>
@@ -32,8 +32,8 @@ void node_init(void)
 {
   node_data = (NodeData *) malloc(MAX_NODE_INIT * sizeof(NodeData));
   if (node_data == NULL) {
-    perror("node_init");
-    exit(1);
+    perror("in node_init()");
+    exit(2);
   }
   max_node = MAX_NODE_INIT;
 }
@@ -50,8 +50,8 @@ void new_node(int id, double x, double y, double z)
 
     ndp = (NodeData *) realloc(node_data, MAX_NODE_GROW * max_node * sizeof(NodeData));
     if (ndp == NULL) {
-      perror("new_node");
-      exit(1);
+      perror("new_node()");
+      exit(2);
     }
 
     max_node *= MAX_NODE_GROW;
@@ -161,19 +161,14 @@ int new_middle_node(int i1, int i2)
   return mnid;
 }
 
-char *last_node_data_line(char *line, int maxlen)
+void print_last_node_data_line(FILE *fp)
 {
   NodeData *n1p;
   int rv;
 
   n1p = &(node_data[n_node-1]);
-  rv = snprintf(line, maxlen, " %d, %f, %f, %f",
-		n1p->id, n1p->x, n1p->y, n1p->z);
-  if (rv >= maxlen || rv <  0) {
-    fprintf(stderr, "Error: too short buffer; use longer one.\n");
-    exit(1);
-  }
-  return line;
+  rv = fprintf(fp, " %d, %f, %f, %f\n",
+	       n1p->id, n1p->x, n1p->y, n1p->z);
 }
 
 void print_node_adv(FILE *fp)
