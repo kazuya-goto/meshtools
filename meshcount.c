@@ -15,27 +15,43 @@
 
 static void usage(void)
 {
-  fprintf(stderr,
-	  "%s: count the number of nodes and elements in FrontSTR mesh file\n"
-	  "Usage: %s mesh_file\n",
-	  progname(), progname());
+  fprintf(stderr, "Usage: %s [OPTION] [MESHFILE]\n"
+	  "Count the number of nodes and elements in MESHFILE.\n"
+	  "  -h   display help\n",
+	  progname());
   exit(1);
 }
 
 int main(int argc, char *argv[])
 {
   FILE *mesh_file;
-  char *line;
   int mode;
   int header;
   int n_node = 0;
   int n_elem = 0;
 
   setprogname(argv[0]);
+  argc--;
+  argv++;
 
-  if (argc > 2) usage();
+  for (; argc > 0; argc--, argv++) {
+    if (argv[0][0] != '-')
+      break;
+    switch (argv[0][1]) {
+    case 'h':
+      usage();
+    default:
+      fprintf(stderr, "Error: unknown option -%c\n", argv[0][1]);
+      usage();
+    }
+  }
 
-  if (argc == 2) {
+  if (argc > 1) {
+    fprintf(stderr, "Error: too many arguments\n");
+    usage();
+  }
+
+  if (argc == 1) {
     mesh_file = fopen(argv[1], "r");
     if (mesh_file == NULL) {
       perror(argv[1]);
@@ -47,7 +63,7 @@ int main(int argc, char *argv[])
 
   meshio_init(mesh_file);
 
-  while ((line = meshio_readline(&mode, &header)) != NULL) {
+  while (meshio_readline(&mode, &header)) {
 
     if (mode == COMMENT) continue;
     if (mode == HEADER) continue;

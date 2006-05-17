@@ -14,7 +14,7 @@ static int header_mode;
 void meshio_init(FILE *fp)
 {
   if (fp == NULL) {
-    fprintf(stderr, "error: meshio_init(NULL)\n");
+    fprintf(stderr, "Error: meshio_init(NULL)\n");
     exit(2);
   }
   meshfile = fp;
@@ -43,7 +43,7 @@ char *meshio_readline(int *mode, int *header)
 
   if (strlen(line) == maxlen-1 &&
       line[maxlen-2] != '\n') {
-    fprintf(stderr, "too long line (longer than %d)\n", maxlen);
+    fprintf(stderr, "too long line (longer than %u)\n", maxlen);
     exit(2);
   }
 

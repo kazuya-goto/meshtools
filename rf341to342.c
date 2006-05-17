@@ -20,9 +20,14 @@
 static void usage(void)
 {
   fprintf(stderr,
-	  "%s: Refine FrontSTR-format 341 mesh data into 342 mesh data\n"
-	  "Usage: %s from_file to_file\n",
-	  progname(), progname());
+	  "Usage: %s [OPTION] [SOURCE [DEST]]\n"
+	  "Refine FrontSTR-format 341 mesh file SOURCE, "
+	  "or standard input, into "
+	  "342 mesh file DEST, "
+	  "or standard output.\n"
+	  "  -v   verbose mode\n"
+	  "  -h   display help\n",
+	  progname());
   exit(1);
 }
 
@@ -50,13 +55,18 @@ int main(int argc, char *argv[])
     case 'v':
       verbose++;
       break;
+    case 'h':
+      usage();
     default:
-      fprintf(stderr, "unknown option -%c\n", argv[0][1]);
+      fprintf(stderr, "Error: unknown option -%c\n", argv[0][1]);
       usage();
     }
   }
 
-  if (argc > 2) usage();
+  if (argc > 2) {
+    fprintf(stderr, "Error: too many arguments\n");
+    usage();
+  }
 
   if (verbose)
     print_log(stderr, "Starting mesh-type conversion...");
@@ -146,7 +156,7 @@ int main(int argc, char *argv[])
 	/* check element type and edit */
 	p_elem_type = strstr(line, "341");
 	if (p_elem_type == NULL) {
-	  fprintf(stderr, "Error: element type is not \"341\"?\n");
+	  fprintf(stderr, "Error: element type is not \"341\"\n");
 	  exit(1);
 	}
 	p_elem_type[2] = '2';
@@ -159,7 +169,7 @@ int main(int argc, char *argv[])
 
       } else {
 	if (header_prev == NODE) {
-	  fprintf(stderr, "error: data after NODE has to be ELEMENT\n");
+	  fprintf(stderr, "Error: data after NODE has to be ELEMENT\n");
 	  exit(1);
 	}
 	fprintf(to_file, "%s", line);

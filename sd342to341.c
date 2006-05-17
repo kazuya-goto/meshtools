@@ -19,10 +19,15 @@
 static void usage(void)
 {
   fprintf(stderr,
-	  "%s: Subdevide FrontSTR-format 342 mesh data into 341 mesh data\n"
-	  "    with 8 times as many elements\n"
-	  "Usage: %s from_file to_file\n",
-	  progname(), progname());
+	  "Usage: %s [OPTION] [SOURCE [DEST]]\n"
+	  "Subdevide FrontSTR-format 342 mesh file SOURCE, "
+	  "Refine FrontSTR-format 341 mesh file SOURCE, "
+	  "or standard input, into "
+	  "341 mesh file DEST, "
+	  "or standard output.\n"
+	  "  -v   verbose mode\n"
+	  "  -h   display help\n",
+	  progname());
   exit(1);
 }
 
@@ -52,13 +57,18 @@ int main(int argc, char *argv[])
     case 'v':
       verbose++;
       break;
+    case 'h':
+      usage();
     default:
-      fprintf(stderr, "unknown option -%c\n", argv[0][1]);
+      fprintf(stderr, "Error: unknown option -%c\n", argv[0][1]);
       usage();
     }
   }
 
-  if (argc > 2) usage();
+  if (argc > 2) {
+    fprintf(stderr, "Error: too many arguments\n");
+    usage();
+  }
 
   if (verbose)
     print_log(stderr, "Starting mesh-type conversion...");

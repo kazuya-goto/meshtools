@@ -100,15 +100,15 @@ int middle_node(int i1, int i2, int *mnidp)
 
   /* not found: register as a new edge */
   if (edp->n_edge == edp->max_edge) {
-    Edge *ep;
+    Edge *etmp;
 
-    ep = (Edge *) realloc(edp->edge, (edp->max_edge + MAX_EDGE_GROW) * sizeof(Edge));
-    if (ep == NULL) {
+    etmp = (Edge *) realloc(edp->edge, (edp->max_edge + MAX_EDGE_GROW) * sizeof(Edge));
+    if (etmp == NULL) {
       perror("in middle_node()");
       exit(2);
     }
     edp->max_edge += MAX_EDGE_GROW;
-    edp->edge = ep;
+    edp->edge = etmp;
   }
 
   j = edp->n_edge;
@@ -128,7 +128,7 @@ int middle_node(int i1, int i2, int *mnidp)
 void print_edge_stat(FILE *log_file)
 {
   int neg, ne;
-  int min, max;
+  int min = 10000, max = 0;
   int sum = 0, sumg = 0;
   int n_node_actv = 0;
   double avr;

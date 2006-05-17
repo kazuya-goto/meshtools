@@ -19,9 +19,14 @@
 static void usage(void)
 {
   fprintf(stderr,
-	  "%s: Convert FrontSTR-format mesh file into Adventure mesh file\n"
-	  "Usage: %s from_file to_file\n",
-	  progname(), progname());
+	  "Usage: %s [OPTION] [SOURCE [DEST]]\n"
+	  "Convert FrontSTR-format mesh file SOURCE, "
+	  "or standard input, into "
+	  "Adventure-format mesh file DEST, "
+	  "or standard output.\n"
+	  "  -v   verbose mode\n"
+	  "  -h   display help\n",
+	  progname());
   exit(1);
 }
 
@@ -48,13 +53,18 @@ int main(int argc, char *argv[])
     case 'v':
       verbose++;
       break;
+    case 'h':
+      usage();
     default:
-      fprintf(stderr, "unknown option -%c\n", argv[0][1]);
+      fprintf(stderr, "Error: unknown option -%c\n", argv[0][1]);
       usage();
     }
   }
 
-  if (argc > 2) usage();
+  if (argc > 2) {
+    fprintf(stderr, "Error: too many arguments\n");
+    usage();
+  }
 
   if (verbose)
     print_log(stderr, "Starting mesh-type conversion...");
@@ -119,7 +129,7 @@ int main(int argc, char *argv[])
       double x, y, z;
 
       if (sscanf(line, "%d,%lf,%lf,%lf", &node_id, &x, &y, &z) != 4) {
-	fprintf(stderr, "error: reading node data failed\n");
+	fprintf(stderr, "Error: reading node data failed\n");
 	exit(1);
       }
       new_node(node_id, x, y, z);
@@ -131,7 +141,7 @@ int main(int argc, char *argv[])
 		    &elem_id, &n[0], &n[1], &n[2], &n[3], &n[4],
 		    &n[5], &n[6], &n[7], &n[8], &n[9]);
       if (nret != 5 && nret != 11) {
-	fprintf(stderr, "error: reading element data failed\n");
+	fprintf(stderr, "Error: reading element data failed\n");
 	exit(1);
       }
       new_elem(elem_id, n);

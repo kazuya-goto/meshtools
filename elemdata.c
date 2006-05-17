@@ -44,7 +44,7 @@ void elem_init(char *header)
     if (strstr(elem_header, "341") != NULL)
       npe = 4;
     else {
-      fprintf(stderr, "error: element type not supported\n");
+      fprintf(stderr, "Error: element type not supported\n");
       exit(1);
     }
   }
