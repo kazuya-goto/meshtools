@@ -70,9 +70,9 @@ int main(int argc, char *argv[])
   }
 
   if (argc == 2) {
-    to_file = fopen(argv[2], "w");
+    to_file = fopen(argv[1], "w");
     if (to_file == NULL) {
-      perror(argv[2]);
+      perror(argv[1]);
       exit(2);
     }
   } else {
@@ -80,8 +80,6 @@ int main(int argc, char *argv[])
   }
 
   meshio_init(from_file);
-  node_init();
-  elem_init(NULL);
 
   while ((line = meshio_readline(&mode, &header)) != NULL) {
 
@@ -98,17 +96,17 @@ int main(int argc, char *argv[])
 
       /* check the current header */
       if (header == NODE) {
-	if (verbose && header_prev != NODE)
-	  print_log(stderr, "Start reading NODE-part...");
+	if (header_prev != NODE) {
+	  if (verbose)
+	    print_log(stderr, "Start reading NODE-part...");
+	  node_init();
+	}
 
       } else if (header == ELEMENT) {
-	char *p_elem_type;
-	if (verbose && header_prev != ELEMENT)
-	  print_log(stderr, "Start reading ELEMENT-part...");
-	p_elem_type = strstr(line, "342");
-	if (p_elem_type == NULL) {
-	  fprintf(stderr, "Error: element type is not \"342\"?\n");
-	  exit(1);
+	if (header_prev != ELEMENT) {
+	  if (verbose)
+	    print_log(stderr, "Start reading ELEMENT-part...");
+	  elem_init(line);
 	}
       }
       header_prev = header;
@@ -121,20 +119,19 @@ int main(int argc, char *argv[])
       double x, y, z;
 
       if (sscanf(line, "%d,%lf,%lf,%lf", &node_id, &x, &y, &z) != 4) {
-	fprintf(stderr, "Error: reading node data failed\n");
+	fprintf(stderr, "error: reading node data failed\n");
 	exit(1);
       }
       new_node(node_id, x, y, z);
 
     } else if (header == ELEMENT) {
-      int elem_id, n[10];
+      int elem_id, n[10], nret;
 
-      if (sscanf(line,
-		 "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-		 &elem_id, &n[0], &n[1], &n[2], &n[3], &n[4],
-		 &n[5], &n[6], &n[7], &n[8], &n[9])
-	  != 11) {
-	fprintf(stderr, "Error: reading element data failed\n");
+      nret = sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+		    &elem_id, &n[0], &n[1], &n[2], &n[3], &n[4],
+		    &n[5], &n[6], &n[7], &n[8], &n[9]);
+      if (nret != 5 && nret != 11) {
+	fprintf(stderr, "error: reading element data failed\n");
 	exit(1);
       }
       new_elem(elem_id, n);
@@ -144,10 +141,10 @@ int main(int argc, char *argv[])
   meshio_finalize();
   if (from_file != stdin) fclose(from_file);
 
-  /* element data */
+  /* write element data */
   fprintf(to_file, "%d\n", number_of_elems());
   print_elem_adv(to_file);
-  /* node data */
+  /* write node data */
   fprintf(to_file, "%d\n", number_of_nodes());
   print_node_adv(to_file);
 

@@ -17,6 +17,7 @@ static ElemData342 *elem_data;
 static int max_elem;
 
 static char *elem_header;
+static int npe = 10;
 
 void elem_init(char *header)
 {
@@ -38,6 +39,15 @@ void elem_init(char *header)
     exit(2);
   }
   strcpy(elem_header, header);
+
+  if (strstr(elem_header, "342") == NULL) {
+    if (strstr(elem_header, "341") != NULL)
+      npe = 4;
+    else {
+      fprintf(stderr, "error: element type not supported\n");
+      exit(1);
+    }
+  }
 }
 
 void elem_finalize(void)
@@ -68,7 +78,7 @@ void new_elem(int id, int *n)
   }
 
   elem_data[n_elem].id = id;
-  for (i = 0; i < 10; i++)
+  for (i = 0; i < npe; i++)
     elem_data[n_elem].n[i] = n[i];
   n_elem++;
 }
@@ -86,7 +96,7 @@ void print_elem(FILE *fp)
     fprintf(fp, "%s", elem_header);
   for (i = 0; i < n_elem; i++) {
     fprintf(fp, "%d", elem_data[i].id);
-    for (j = 0; j < 10; j++)
+    for (j = 0; j < npe; j++)
       fprintf(fp, ", %d", elem_data[i].n[j]);
     fprintf(fp, "\n");
   }
@@ -98,7 +108,7 @@ void print_elem_adv(FILE *fp)
   static int f2a[10] = {3, 1, 0, 2, 8, 7, 9, 6, 5, 4};
 
   for (i = 0; i < n_elem; i++) {
-    for (j = 0; j < 10; j++)
+    for (j = 0; j < npe; j++)
       fprintf(fp, " %d", get_local_node_id(elem_data[i].n[f2a[j]]));
     fprintf(fp, "\n");
   }

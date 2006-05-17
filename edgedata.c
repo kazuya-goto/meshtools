@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified: May 16, 2006
+ * Last modified: May 17, 2006
  *
  */
 #include <stdio.h>
@@ -65,9 +65,8 @@ void edge_finalize(void)
 {
   int i;
 
-  for (i = 0; i < n_node_init; i++) {
+  for (i = 0; i < n_node_init; i++)
     free(edge_data[i].edge);
-  }
   free(edge_data);
 }
 

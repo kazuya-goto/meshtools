@@ -156,12 +156,12 @@ int main(int argc, char *argv[])
       fprintf(to_file, "%s", line);
 
     } else if (header == ELEMENT) {
-      int elem_id, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10;
-      double ndist58, ndist69, ndist710, ar;
+      int elem_id, n[10];
+      double ndist47, ndist58, ndist69, ar;
 
-      if (sscanf(line,
-		 "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-		 &elem_id, &n1, &n2, &n3, &n4, &n5, &n6, &n7, &n8, &n9, &n10)
+      if (sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+		 &elem_id, &n[0], &n[1], &n[2], &n[3], &n[4],
+		 &n[5], &n[6], &n[7], &n[8], &n[9])
 	  != 11) {
 	fprintf(stderr, "Error: reading element data failed\n");
 	exit(1);
@@ -170,54 +170,54 @@ int main(int argc, char *argv[])
 	      " %d, %d, %d, %d, %d\n"
 	      " %d, %d, %d, %d, %d\n"
 	      " %d, %d, %d, %d, %d\n",
-	      8*elem_id-7, n1, n7, n6, n8,
-	      8*elem_id-6, n6, n5, n3, n10,
-	      8*elem_id-5, n7, n2, n5, n9,
-	      8*elem_id-4, n8, n9, n10, n4);
+	      8*elem_id-7, n[0], n[6], n[5], n[7],
+	      8*elem_id-6, n[5], n[4], n[2], n[9],
+	      8*elem_id-5, n[6], n[1], n[4], n[8],
+	      8*elem_id-4, n[7], n[8], n[9], n[3]);
 
-      ndist58 = node_dist(n5, n8);
-      ndist69 = node_dist(n6, n9);
-      ndist710 = node_dist(n7, n10);
+      ndist47 = node_dist(n[4], n[7]);
+      ndist58 = node_dist(n[5], n[8]);
+      ndist69 = node_dist(n[6], n[9]);
 
-      if (ndist58 < ndist69 && ndist58 < ndist710) {
+      if (ndist47 < ndist58 && ndist47 < ndist69) {
 	fprintf(to_file, " %d, %d, %d, %d, %d\n"
 		" %d, %d, %d, %d, %d\n"
 		" %d, %d, %d, %d, %d\n"
 		" %d, %d, %d, %d, %d\n",
-		8*elem_id-3, n5, n8, n6, n7,
-		8*elem_id-2, n5, n8, n7, n9,
-		8*elem_id-1, n5, n8, n9, n10,
-		8*elem_id, n5, n8, n10, n6);
-	if (ndist69 < ndist710)
-	  ar = ndist710/ndist58;
+		8*elem_id-3, n[4], n[7], n[5], n[6],
+		8*elem_id-2, n[4], n[7], n[6], n[8],
+		8*elem_id-1, n[4], n[7], n[8], n[9],
+		8*elem_id, n[4], n[7], n[9], n[5]);
+	if (ndist58 < ndist69)
+	  ar = ndist69/ndist47;
 	else
+	  ar = ndist58/ndist47;
+      } else if (ndist58 < ndist69) {
+	fprintf(to_file, " %d, %d, %d, %d, %d\n"
+		" %d, %d, %d, %d, %d\n"
+		" %d, %d, %d, %d, %d\n"
+		" %d, %d, %d, %d, %d\n",
+		8*elem_id-3, n[5], n[8], n[6], n[4],
+		8*elem_id-2, n[5], n[8], n[4], n[9],
+		8*elem_id-1, n[5], n[8], n[9], n[7],
+		8*elem_id, n[5], n[8], n[7], n[6]);
+	if (ndist47 < ndist69)
 	  ar = ndist69/ndist58;
-      } else if (ndist69 < ndist710) {
-	fprintf(to_file, " %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n",
-		8*elem_id-3, n6, n9, n7, n5,
-		8*elem_id-2, n6, n9, n5, n10,
-		8*elem_id-1, n6, n9, n10, n8,
-		8*elem_id, n6, n9, n8, n7);
-	if (ndist58 < ndist710)
-	  ar = ndist710/ndist69;
 	else
-	  ar = ndist58/ndist69;
+	  ar = ndist47/ndist58;
       } else {
 	fprintf(to_file, " %d, %d, %d, %d, %d\n"
 		" %d, %d, %d, %d, %d\n"
 		" %d, %d, %d, %d, %d\n"
 		" %d, %d, %d, %d, %d\n",
-		8*elem_id-3, n7, n10, n5, n6,
-		8*elem_id-2, n7, n10, n6, n8,
-		8*elem_id-1, n7, n10, n8, n9,
-		8*elem_id, n7, n10, n9, n5);
-	if (ndist58 < ndist69)
-	  ar = ndist69/ndist710;
+		8*elem_id-3, n[6], n[9], n[4], n[5],
+		8*elem_id-2, n[6], n[9], n[5], n[7],
+		8*elem_id-1, n[6], n[9], n[7], n[8],
+		8*elem_id, n[6], n[9], n[8], n[4]);
+	if (ndist47 < ndist58)
+	  ar = ndist58/ndist69;
 	else
-	  ar = ndist58/ndist710;
+	  ar = ndist47/ndist69;
       }
       if (ar < armin) armin = ar;
       if (ar > armax) armax = ar;
