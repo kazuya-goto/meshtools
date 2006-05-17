@@ -15,6 +15,7 @@
 #include "meshio.h"
 #include "nodedata.h"
 #include "edgedata.h"
+#include "elemdata.h"
 
 #define BUFSIZE 1024
 
@@ -33,8 +34,6 @@ int main(int argc, char *argv[])
   FILE *from_file;
   char from_file_name[64];
   FILE *to_file;
-  /* char tmpname[64]; */ /* for debugging */
-  FILE *tmp_file;
   char *line;
   int mode;
   int header, header_prev = NONE;
@@ -86,17 +85,6 @@ int main(int argc, char *argv[])
     to_file = stdout;
   }
 
-  tmp_file = tmpfile();
-  /* for debugging...
-  strcpy(tmpname, progname);
-  strcat(tmpname, ".tmp");
-  tmp_file = fopen(tmpname, "w+");
-  */
-  if (tmp_file == NULL) {
-    perror("tmpfile");
-    exit(2);
-  }
-
   {
     time_t t;
     time(&t);
@@ -111,7 +99,6 @@ int main(int argc, char *argv[])
   }
 
   meshio_init(from_file);
-  node_init();
 
   while ((line = meshio_readline(&mode, &header)) != NULL) {
 
@@ -128,40 +115,43 @@ int main(int argc, char *argv[])
 	edge_init();
 
       } else if (header_prev == ELEMENT && header != ELEMENT) {
-	char tmpbuf[BUFSIZE];
-
 	if (verbose) {
 	  print_log(stderr, "reading ELEMENT-part completed.");
 	  print_edge_stat(stderr);
 	}
 
-	/* copy tmp_file to to_file */
 	if (verbose)
-	  print_log(stderr, "Copying element data... ");
-	rewind(tmp_file);
-	while (fgets(tmpbuf, sizeof(tmpbuf), tmp_file))
-	  fputs(tmpbuf, to_file);
+	  print_log(stderr, "Writing element data... ");
+	print_elem(to_file);
 	if (verbose)
 	  print_log(stderr, "done.");
       }
 
       /* check the current header */
       if (header == NODE) {
-	if (verbose && header_prev != NODE)
-	  print_log(stderr, "Start reading NODE-part...");
+	if (header_prev != NODE) {
+	  if (verbose)
+	    print_log(stderr, "Start reading NODE-part...");
+	  node_init();
+	}
 	fprintf(to_file, "%s", line);
 
       } else if (header == ELEMENT) {
 	char *p_elem_type;
-	if (verbose && header_prev != ELEMENT)
-	  print_log(stderr, "Start reading ELEMENT-part...");
+
+	/* check element type and edit */
 	p_elem_type = strstr(line, "341");
 	if (p_elem_type == NULL) {
 	  fprintf(stderr, "Error: element type is not \"341\"?\n");
 	  exit(1);
 	}
 	p_elem_type[2] = '2';
-	fprintf(tmp_file, "%s", line);
+
+	if (header_prev != ELEMENT) {
+	  if (verbose)
+	    print_log(stderr, "Start reading ELEMENT-part...");
+	  elem_init(line);
+	}
 
       } else {
 	fprintf(to_file, "%s", line);
@@ -184,42 +174,41 @@ int main(int argc, char *argv[])
       fprintf(to_file, "%s", line);
 
     } else if (header == ELEMENT) {
-      int elem_id, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, dummy;
+      int elem_id, n[10], dummy;
 
       if (sscanf(line,
 		 "%d,%d,%d,%d,%d,%d",
-		 &elem_id, &n1, &n2, &n3, &n4, &dummy)
+		 &elem_id, &n[0], &n[1], &n[2], &n[3], &dummy)
 	  != 5) {
 	fprintf(stderr, "Error: reading element data failed\n");
 	exit(1);
       }
 
-      if (middle_node(n2, n3, &n5))
+      if (middle_node(n[1], n[2], &n[4]))
 	print_last_node_data_line(to_file);
-      if (middle_node(n1, n3, &n6))
+      if (middle_node(n[0], n[2], &n[5]))
 	print_last_node_data_line(to_file);
-      if (middle_node(n1, n2, &n7))
+      if (middle_node(n[0], n[1], &n[6]))
 	print_last_node_data_line(to_file);
-      if (middle_node(n1, n4, &n8))
+      if (middle_node(n[0], n[3], &n[7]))
 	print_last_node_data_line(to_file);
-      if (middle_node(n2, n4, &n9))
+      if (middle_node(n[1], n[3], &n[8]))
 	print_last_node_data_line(to_file);
-      if (middle_node(n3, n4, &n10))
+      if (middle_node(n[2], n[3], &n[9]))
 	print_last_node_data_line(to_file);
 
-      fprintf(tmp_file, " %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d\n",
-	      elem_id, n1, n2, n3, n4, n5, n6, n7, n8, n9, n10);
+      new_elem(elem_id, n); 
 
     } else {
       fprintf(to_file, "%s", line);
     }
   }
 
+  elem_finalize();
   edge_finalize();
   node_finalize();
   meshio_finalize();
 
-  fclose(tmp_file);
   if (from_file != stdin) fclose(from_file);
   if (to_file != stdout) fclose(to_file);
 

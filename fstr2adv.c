@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 
   meshio_init(from_file);
   node_init();
-  elem_init();
+  elem_init(NULL);
 
   while ((line = meshio_readline(&mode, &header)) != NULL) {
 

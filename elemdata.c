@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "elemdata.h"
 #include "nodedata.h"
 
@@ -15,7 +16,9 @@ static int n_elem = 0;
 static ElemData342 *elem_data;
 static int max_elem;
 
-void elem_init(void)
+static char *elem_header;
+
+void elem_init(char *header)
 {
   elem_data = (ElemData342 *) malloc(MAX_ELEM_INIT * sizeof(ElemData342));
   if (elem_data == NULL) {
@@ -23,11 +26,24 @@ void elem_init(void)
     exit(2);
   }
   max_elem = MAX_ELEM_INIT;
+
+  if (header == NULL) {
+    elem_header = NULL;
+    return;
+  }
+
+  elem_header = (char *) malloc((strlen(header)+1) * sizeof(char));
+  if (header == NULL) {
+    perror("in elem_init()");
+    exit(2);
+  }
+  strcpy(elem_header, header);
 }
 
 void elem_finalize(void)
 {
   free(elem_data);
+  free (elem_header);
 }
 
 void new_elem(int id, int *n)
@@ -60,6 +76,20 @@ void new_elem(int id, int *n)
 int number_of_elems(void)
 {
   return n_elem;
+}
+
+void print_elem(FILE *fp)
+{
+  int i, j;
+
+  if (elem_header != NULL)
+    fprintf(fp, "%s", elem_header);
+  for (i = 0; i < n_elem; i++) {
+    fprintf(fp, "%d", elem_data[i].id);
+    for (j = 0; j < 10; j++)
+      fprintf(fp, " %d", elem_data[i].n[j]);
+    fprintf(fp, "\n");
+  }
 }
 
 void print_elem_adv(FILE *fp)
