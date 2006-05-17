@@ -68,9 +68,16 @@ char *meshio_readline(int *mode, int *header)
       *header = EGROUP;
     else
       *header = OTHER;
-
-  } else
+    header_mode = *header;
+  } else {
     *mode = DATA;
+    if (header_mode == NONE) {
+      fprintf(stderr,
+              "Error: unknown file format (no header before data line)\n");
+      exit(1);
+    }
+    *header = header_mode;
+  }
 
   return line;
 }

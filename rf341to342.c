@@ -11,77 +11,75 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "util.h"
 #include "meshio.h"
 #include "nodedata.h"
 #include "edgedata.h"
 
 #define BUFSIZE 1024
 
-static void print_log(FILE *log_file, char *log_mesg);
-
+static void usage(void)
+{
+  fprintf(stderr,
+	  "%s: Refine FrontSTR-format 341 mesh data into 342 mesh data\n"
+	  "Usage: %s from_file to_file\n",
+	  progname(), progname());
+  exit(1);
+}
 
 int main(int argc, char *argv[])
 {
-  char *progname;
-  char logname[64];
-  FILE *log_file;
-
+  int verbose = 0;
   FILE *from_file;
   char from_file_name[64];
   FILE *to_file;
   /* char tmpname[64]; */ /* for debugging */
   FILE *tmp_file;
-
   char *line;
   int mode;
   int header, header_prev = NONE;
-
   clock_t before_c, after_c;
 
   before_c = clock();
 
-  /* progname = basename(argv[0]); */
-  if ((progname = strrchr(argv[0], '/')) == NULL &&
-      (progname = strrchr(argv[0], '\\')) == NULL) {
-    fprintf(stderr, "strange path??\n");
-    progname = argv[0];
-  } else {
-    progname++;
+  setprogname(argv[0]);
+  argc--;
+  argv++;
+
+  for (; argc > 0; argc--, argv++) {
+    if (argv[0][0] != '-')
+      break;
+    switch (argv[0][1]) {
+    case 'v':
+      verbose++;
+      break;
+    default:
+      fprintf(stderr, "unknown option -%c\n", argv[0][1]);
+      usage();
+    }
   }
 
-  if (argc > 3) {
-    fprintf(stderr,
-	    "%s: Refine FrontSTR-format 341 mesh data into 342 mesh data\n"
-	    "Usage: %s from_file to_file\n",
-	    progname, progname);
-    exit(1);
-  }
+  if (argc > 2) usage();
 
-  strcpy(logname, progname);
-  strcat(logname, ".log");
-  log_file = fopen(logname, "w");
-  if (log_file == NULL) {
-    perror(logname);
-    exit(2);
-  }
-  print_log(log_file, "Starting mesh-type conversion...");
+  if (verbose)
+    print_log(stderr, "Starting mesh-type conversion...");
 
-  if (argc >= 2) {
-    from_file = fopen(argv[1], "r");
+  if (argc >= 1) {
+    from_file = fopen(argv[0], "r");
     if (from_file == NULL) {
-      perror(argv[1]);
+      perror(argv[0]);
       exit(2);
     }
-    strcpy(from_file_name, argv[1]);
+    strcpy(from_file_name, argv[0]);
   } else {
     from_file = stdin;
     strcpy(from_file_name, "stdin");
   }
 
-  if (argc == 3) {
-    to_file = fopen(argv[2], "w");
+  if (argc == 2) {
+    to_file = fopen(argv[1], "w");
     if (to_file == NULL) {
-      perror(argv[2]);
+      perror(argv[1]);
       exit(2);
     }
   } else {
@@ -104,11 +102,12 @@ int main(int argc, char *argv[])
     time(&t);
     fprintf(to_file,
 	    "##############################################################\n"
-	    "# FrontSTR 342 mesh file refined from 341 mesh by %s\n"
+	    "# FrontSTR 342 mesh file refined by %s\n"
 	    "# Date: %s"
-	    "# Original: %s\n"
+	    "# Original 341 mesh: %s\n"
+	    "# CAUTION: BCs are not applied on middle nodes.\n"
 	    "##############################################################\n",
-	    progname, ctime(&t), from_file_name);
+	    progname(), ctime(&t), from_file_name);
   }
 
   meshio_init(from_file);
@@ -124,34 +123,38 @@ int main(int argc, char *argv[])
     if (mode == HEADER) {
       /* check the previous header */
       if (header_prev == NODE && header != NODE) {
-	print_log(log_file, "reading NODE-part completed.");
-
+	if (verbose)
+	  print_log(stderr, "reading NODE-part completed.");
 	edge_init();
 
       } else if (header_prev == ELEMENT && header != ELEMENT) {
 	char tmpbuf[BUFSIZE];
 
-	print_log(log_file, "reading ELEMENT-part completed.");
-	print_edge_stat(log_file);
+	if (verbose) {
+	  print_log(stderr, "reading ELEMENT-part completed.");
+	  print_edge_stat(stderr);
+	}
 
 	/* copy tmp_file to to_file */
-	print_log(log_file, "Copying element data... ");
+	if (verbose)
+	  print_log(stderr, "Copying element data... ");
 	rewind(tmp_file);
 	while (fgets(tmpbuf, sizeof(tmpbuf), tmp_file))
 	  fputs(tmpbuf, to_file);
-	print_log(log_file, "done.");
+	if (verbose)
+	  print_log(stderr, "done.");
       }
 
       /* check the current header */
       if (header == NODE) {
-	if (header_prev != NODE)
-	  print_log(log_file, "Start reading NODE-part...");
+	if (verbose && header_prev != NODE)
+	  print_log(stderr, "Start reading NODE-part...");
 	fprintf(to_file, "%s", line);
 
       } else if (header == ELEMENT) {
 	char *p_elem_type;
-	if (header_prev != ELEMENT)
-	  print_log(log_file, "Start reading ELEMENT-part...");
+	if (verbose && header_prev != ELEMENT)
+	  print_log(stderr, "Start reading ELEMENT-part...");
 	p_elem_type = strstr(line, "341");
 	if (p_elem_type == NULL) {
 	  fprintf(stderr, "Error: element type is not \"341\"?\n");
@@ -168,12 +171,6 @@ int main(int argc, char *argv[])
     }
 
     /* now mode==DATA */
-    if (header == NONE) {
-      fprintf(stderr,
-	      "Error: unknown file format (no header before data line)\n");
-      exit(1);
-    }
-
     if (header == NODE) {
       int node_id;
       double x, y, z;
@@ -226,25 +223,13 @@ int main(int argc, char *argv[])
   if (from_file != stdin) fclose(from_file);
   if (to_file != stdout) fclose(to_file);
 
-  print_log(log_file, "mesh-type conversion completed.");
+  if (verbose) {
+    print_log(stderr, "mesh-type conversion completed.");
 
-  after_c = clock();
-  fprintf(log_file, " Total time: %.2f sec\n",
-	  (double) (after_c - before_c) / (double) CLOCKS_PER_SEC);
+    after_c = clock();
+    fprintf(stderr, " Total time: %.2f sec\n",
+	    (double) (after_c - before_c) / (double) CLOCKS_PER_SEC);
+  }
 
-  fclose(log_file);
   return 0;
-}
-
-
-static void print_log(FILE *log_file, char *log_mesg)
-{
-  time_t t;
-  char date_str[32];
-
-  time(&t);
-  strcpy(date_str, ctime(&t));
-  *strchr(date_str, '\n') = '\0';
-  fprintf(log_file, "%s: %s\n", date_str, log_mesg);
-  fflush(log_file);
 }
