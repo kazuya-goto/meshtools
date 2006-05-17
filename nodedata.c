@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last Modified: May 16, 2006
+ * Last Modified: May 17, 2006
  *
  */
 #include <stdio.h>
@@ -16,7 +16,6 @@ typedef struct NodeData {
   double x;
   double y;
   double z;
-  int new_id;
 } NodeData;
 
 enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 2 };
@@ -161,20 +160,17 @@ int new_middle_node(int i1, int i2)
   return mnid;
 }
 
-void print_last_node_data_line(FILE *fp)
+void print_middle_node(FILE *fp)
 {
-  NodeData *n1p;
-  int rv;
-
-  n1p = &(node_data[n_node-1]);
-  rv = fprintf(fp, " %d, %f, %f, %f\n",
-	       n1p->id, n1p->x, n1p->y, n1p->z);
+  int i;
+  for (i = n_node - n_mnode; i < n_node; i++)
+    fprintf(fp, "%d, %f, %f, %f\n", node_data[i].id,
+	    node_data[i].x, node_data[i].y, node_data[i].z);
 }
 
 void print_node_adv(FILE *fp)
 {
   int i;
-  for (i = 0; i < n_node; i++) {
+  for (i = 0; i < n_node; i++)
     fprintf(fp, "%f %f %f\n", node_data[i].x, node_data[i].y, node_data[i].z);
-  }
 }

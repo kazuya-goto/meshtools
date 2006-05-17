@@ -4,7 +4,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified on May 16, 2006
+ * Last modified on May 17, 2006
  *
  */
 #include <stdio.h>
@@ -16,8 +16,6 @@
 #include "nodedata.h"
 #include "edgedata.h"
 #include "elemdata.h"
-
-#define BUFSIZE 1024
 
 static void usage(void)
 {
@@ -121,7 +119,13 @@ int main(int argc, char *argv[])
 	}
 
 	if (verbose)
-	  print_log(stderr, "Writing element data... ");
+	  print_log(stderr, "Writing middle-node data...");
+	print_middle_node(to_file);
+	if (verbose)
+	  print_log(stderr, "done.");
+
+	if (verbose)
+	  print_log(stderr, "Writing element data...");
 	print_elem(to_file);
 	if (verbose)
 	  print_log(stderr, "done.");
@@ -154,6 +158,10 @@ int main(int argc, char *argv[])
 	}
 
       } else {
+	if (header_prev == NODE) {
+	  fprintf(stderr, "error: data after NODE has to be ELEMENT\n");
+	  exit(1);
+	}
 	fprintf(to_file, "%s", line);
       }
       header_prev = header;
@@ -184,18 +192,12 @@ int main(int argc, char *argv[])
 	exit(1);
       }
 
-      if (middle_node(n[1], n[2], &n[4]))
-	print_last_node_data_line(to_file);
-      if (middle_node(n[0], n[2], &n[5]))
-	print_last_node_data_line(to_file);
-      if (middle_node(n[0], n[1], &n[6]))
-	print_last_node_data_line(to_file);
-      if (middle_node(n[0], n[3], &n[7]))
-	print_last_node_data_line(to_file);
-      if (middle_node(n[1], n[3], &n[8]))
-	print_last_node_data_line(to_file);
-      if (middle_node(n[2], n[3], &n[9]))
-	print_last_node_data_line(to_file);
+      middle_node(n[1], n[2], &n[4]);
+      middle_node(n[0], n[2], &n[5]);
+      middle_node(n[0], n[1], &n[6]);
+      middle_node(n[0], n[3], &n[7]);
+      middle_node(n[1], n[3], &n[8]);
+      middle_node(n[2], n[3], &n[9]);
 
       new_elem(elem_id, n); 
 

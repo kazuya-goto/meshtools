@@ -87,7 +87,7 @@ void print_elem(FILE *fp)
   for (i = 0; i < n_elem; i++) {
     fprintf(fp, "%d", elem_data[i].id);
     for (j = 0; j < 10; j++)
-      fprintf(fp, " %d", elem_data[i].n[j]);
+      fprintf(fp, ", %d", elem_data[i].n[j]);
     fprintf(fp, "\n");
   }
 }
