@@ -52,9 +52,9 @@ int main(int argc, char *argv[])
   }
 
   if (argc == 1) {
-    mesh_file = fopen(argv[1], "r");
+    mesh_file = fopen(argv[0], "r");
     if (mesh_file == NULL) {
-      perror(argv[1]);
+      perror(argv[0]);
       exit(2);
     }
   } else {
