@@ -1,3 +1,11 @@
+/*
+ * meshio.c
+ *
+ * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Created on May 16, 2006
+ * Last modified: May 17, 2006
+ *
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +15,7 @@
 enum {INIT_MAXLEN = 1024};
 
 static char *line;
-static unsigned int maxlen;
+static unsigned maxlen;
 static FILE *meshfile;
 static int header_mode;
 

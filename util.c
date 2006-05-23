@@ -1,3 +1,11 @@
+/*
+ * util.c
+ *
+ * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Created on May 17, 2006
+ * Last modified: May 17, 2006
+ *
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
