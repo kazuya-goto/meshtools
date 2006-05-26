@@ -4,7 +4,7 @@
 extern void node_init(void);
 extern void node_finalize(void);
 extern void new_node(int id, double x, double y, double z);
-extern double node_dist(int i1, int i2);
+extern double node_dist2(int i1, int i2);
 extern int number_of_nodes(void);
 extern int number_of_middle_nodes(void);
 extern int get_local_node_id(int i1);

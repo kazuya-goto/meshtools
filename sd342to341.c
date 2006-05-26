@@ -5,7 +5,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 10, 2006
- * Last modified on May 17, 2006
+ * Last modified on May 26, 2006
  *
  */
 #include <stdio.h>
@@ -185,9 +185,9 @@ int main(int argc, char *argv[])
 	      8*elem_id-5, n[6], n[1], n[4], n[8],
 	      8*elem_id-4, n[7], n[8], n[9], n[3]);
 
-      ndist47 = node_dist(n[4], n[7]);
-      ndist58 = node_dist(n[5], n[8]);
-      ndist69 = node_dist(n[6], n[9]);
+      ndist47 = node_dist2(n[4], n[7]);
+      ndist58 = node_dist2(n[5], n[8]);
+      ndist69 = node_dist2(n[6], n[9]);
 
       if (ndist47 < ndist58 && ndist47 < ndist69) {
 	fprintf(to_file, " %d, %d, %d, %d, %d\n"

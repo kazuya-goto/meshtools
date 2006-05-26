@@ -3,12 +3,11 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last Modified: May 17, 2006
+ * Last Modified: May 26, 2006
  *
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include "nodedata.h"
 
 typedef struct NodeData {
@@ -104,15 +103,15 @@ static NodeData *search_node(int i1)
   return n1p;
 }
 
-double node_dist(int i1, int i2)
+double node_dist2(int i1, int i2)
 {
   NodeData *n1p, *n2p;
 
   n1p = search_node(i1);
   n2p = search_node(i2);
-  return sqrt((n1p->x - n2p->x)*(n1p->x - n2p->x) +
-	      (n1p->y - n2p->y)*(n1p->y - n2p->y) +
-	      (n1p->z - n2p->z)*(n1p->z - n2p->z));
+  return (n1p->x - n2p->x)*(n1p->x - n2p->x) +
+    (n1p->y - n2p->y)*(n1p->y - n2p->y) +
+    (n1p->z - n2p->z)*(n1p->z - n2p->z);
 }
 
 int number_of_nodes(void)

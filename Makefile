@@ -8,7 +8,7 @@ DEBUGFLAGS = -g
 #OPTFLAGS = -O3 -fomit-frame-pointer -ffast-math -funroll-loops
 
 CFLAGS = $(WARNFLAGS) $(DEBUGFLAGS) $(OPTFLAGS)
-LDFLAGS = -lm
+LDFLAGS =
 
 PROGS = rf341to342 sd342to341 meshcount fstr2adv
 
