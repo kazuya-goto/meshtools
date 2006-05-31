@@ -1,5 +1,5 @@
-#ifndef _ELEMDATA_H_
-#define _ELEMDATA_H_
+#ifndef ELEMDATA_H
+#define ELEMDATA_H
 
 extern void elem_init(char *);
 extern void elem_finalize(void);
@@ -8,4 +8,4 @@ extern int number_of_elems(void);
 extern void print_elem(FILE *fp);
 extern void print_elem_adv(FILE *fp);
 
-#endif /* _ELEMDATA_H_ */
+#endif /* ELEMDATA_H */

@@ -1,5 +1,5 @@
-#ifndef _NODEDATA_H_
-#define _NODEDATA_H_
+#ifndef NODEDATA_H
+#define NODEDATA_H
 
 extern void node_init(void);
 extern void node_finalize(void);
@@ -13,4 +13,4 @@ extern int new_middle_node(int i1, int i2);
 extern void print_middle_node(FILE *fp);
 extern void print_node_adv(FILE *fp);
 
-#endif /* _NODEDATA_H_ */
+#endif /* NODEDATA_H */
