@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on May 16, 2006
- * Last modified: May 17, 2006
+ * Last modified: Jun 03, 2006
  *
  */
 #include <stdio.h>
@@ -44,6 +44,10 @@ void meshio_finalize(void)
   header_mode = NONE;
 }
 
+/* read a line from mesh file.
+   return value is the pointer to the line.
+   either COMMENT, HEADER or DATA is set to *mode, and
+   either NODE, ELEMENT, NGROUP, EGROUP or OTHER is set to *header */
 char *meshio_readline(int *mode, int *header)
 {
   if (!fgets(line, maxlen, meshfile))

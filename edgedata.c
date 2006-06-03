@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified: May 17, 2006
+ * Last modified: Jun 03, 2006
  *
  */
 #include <stdio.h>
@@ -32,6 +32,7 @@ enum { MAX_EDGE_INIT = 8, MAX_EDGE_GROW = 8 };
 static int n_node_init;
 static EdgeData *edge_data;
 
+/* initialize edge_data */
 void edge_init(void)
 {
   int i;
@@ -61,6 +62,7 @@ void edge_init(void)
   }
 }
 
+/* finalize edge_data */
 void edge_finalize(void)
 {
   int i;
@@ -70,9 +72,13 @@ void edge_finalize(void)
   free(edge_data);
 }
 
+/* Global node-ID of the middle node between nodes i1 and i2 (global
+   IDs) are set in *mnidp.
+   Return value is 1 if the middle node is newly created, or 0 if the
+   middle node already exists. */
 int middle_node(int i1, int i2, int *mnidp)
 {
-  int li1, li2;
+  int li1, li2; /* local IDs of i1 and i2 */
   EdgeData *edp;
   Edge *ep;
   int j;
@@ -94,7 +100,7 @@ int middle_node(int i1, int i2, int *mnidp)
   for (j = 0; j < edp->n_edge; j++) {
     if (edp->edge[j].onid == i2) {
       *mnidp = edp->edge[j].mnid;
-      return 0;
+      return 0; /* not created */
     }
   }
 
@@ -122,9 +128,10 @@ int middle_node(int i1, int i2, int *mnidp)
   edge_data[li2].n_edge_s++;
 
   *mnidp = ep->mnid;
-  return 1;
+  return 1; /* newly created */
 }
 
+/* print statistic data, just for interest. */
 void print_edge_stat(FILE *log_file)
 {
   int neg, ne;

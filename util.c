@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on May 17, 2006
- * Last modified: May 17, 2006
+ * Last modified: Jun 03, 2006
  *
  */
 #include <stdio.h>
@@ -14,9 +14,9 @@
 
 static char *name;
 
-void setprogname(char *str)
+void setprogname(const char *str)
 {
-  char *p;
+  const char *p;
 
   /* strcpy(progname, basename(str)); */
   if ((p = strrchr(str, '/')) == NULL &&
@@ -49,4 +49,3 @@ void print_log(FILE *fp, char *log_mesg)
   fprintf(fp, "%s: %s\n", date_str, log_mesg);
   fflush(fp);
 }
-

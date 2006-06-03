@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on May 02, 2006
- * Last modified: May 17, 2006
+ * Last modified: Jun 03, 2006
  *
  */
 #include <stdio.h>
@@ -12,12 +12,16 @@
 #include "elemdata.h"
 #include "nodedata.h"
 
+static int npe = 10; /* number of nodes per element (default=10) */
+
+/* data set for a single 342 element.
+   can be used for 341 element as well with npe=4 */
 typedef struct ElemData342 {
   int id;
   int n[10];
 } ElemData342;
 
-enum { MAX_ELEM_INIT = 1024, MAX_ELEM_GROW = 2 };
+enum { MAX_ELEM_INIT = 64, MAX_ELEM_GROW = 2 };
 
 static int n_elem = 0;
 
@@ -25,9 +29,9 @@ static ElemData342 *elem_data;
 static int max_elem;
 
 static char *elem_header;
-static int npe = 10;
 
-void elem_init(char *header)
+/* initialize elem_data */
+void elem_init(const char *header)
 {
   elem_data = (ElemData342 *) malloc(MAX_ELEM_INIT * sizeof(ElemData342));
   if (elem_data == NULL) {
@@ -42,7 +46,7 @@ void elem_init(char *header)
   }
 
   elem_header = (char *) malloc((strlen(header)+1) * sizeof(char));
-  if (header == NULL) {
+  if (elem_header == NULL) {
     perror("in elem_init()");
     exit(2);
   }
@@ -58,13 +62,15 @@ void elem_init(char *header)
   }
 }
 
+/* finalize elem_data */
 void elem_finalize(void)
 {
   free(elem_data);
   free (elem_header);
 }
 
-void new_elem(int id, int *n)
+/* register a new element in elem_data */
+void new_elem(int id, const int *n)
 {
   int i;
 
@@ -91,11 +97,13 @@ void new_elem(int id, int *n)
   n_elem++;
 }
 
+/* return the number of elements */
 int number_of_elems(void)
 {
   return n_elem;
 }
 
+/* print element data */
 void print_elem(FILE *fp)
 {
   int i, j;
@@ -110,6 +118,7 @@ void print_elem(FILE *fp)
   }
 }
 
+/* print element data in Adventure .msh format */
 void print_elem_adv(FILE *fp)
 {
   int i, j;

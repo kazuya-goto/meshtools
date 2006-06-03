@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last Modified: May 26, 2006
+ * Last Modified: Jun 03, 2006
  *
  */
 #include <stdio.h>
@@ -26,6 +26,7 @@ static NodeData *node_data;
 static int max_node;
 static int issorted = 1;
 
+/* initialize node_data */
 void node_init(void)
 {
   node_data = (NodeData *) malloc(MAX_NODE_INIT * sizeof(NodeData));
@@ -36,11 +37,13 @@ void node_init(void)
   max_node = MAX_NODE_INIT;
 }
 
+/* finalize node_data */
 void node_finalize(void)
 {
   free(node_data);
 }
 
+/* register a new node in node_data */
 void new_node(int id, double x, double y, double z)
 {
   if (n_node == max_node) {
@@ -69,6 +72,7 @@ void new_node(int id, double x, double y, double z)
   n_node++;
 }
 
+/* node comparison, to be used by bsearch and qsort */
 static int node_compar(const void *vn1, const void *vn2)
 {
   const NodeData *n1, *n2;
@@ -81,6 +85,7 @@ static int node_compar(const void *vn1, const void *vn2)
   else return 1;
 }
 
+/* find a node having globalID i1 */
 static NodeData *search_node(int i1)
 {
   NodeData node1, *n1p;
@@ -103,6 +108,7 @@ static NodeData *search_node(int i1)
   return n1p;
 }
 
+/* return a square of distance between two nodes */
 double node_dist2(int i1, int i2)
 {
   NodeData *n1p, *n2p;
@@ -114,16 +120,19 @@ double node_dist2(int i1, int i2)
     (n1p->z - n2p->z)*(n1p->z - n2p->z);
 }
 
+/* return the number of nodes */
 int number_of_nodes(void)
 {
   return n_node;
 }
 
+/* return the number of middle-nodes */
 int number_of_middle_nodes(void)
 {
   return n_mnode;
 }
 
+/* return the local nodeID of node i1 (globalID) */
 int get_local_node_id(int i1)
 {
   int li1;
@@ -137,11 +146,13 @@ int get_local_node_id(int i1)
   return li1;
 }
 
+/* return the global nodeID of node li1 (localID) */
 int get_global_node_id(int li1)
 {
   return node_data[li1].id;
 }
 
+/* register a middle node between i1 and i2 as a new node */
 int new_middle_node(int i1, int i2)
 {
   int mnid;
@@ -159,6 +170,7 @@ int new_middle_node(int i1, int i2)
   return mnid;
 }
 
+/* print node data of middle nodes */
 void print_middle_node(FILE *fp)
 {
   int i;
@@ -167,6 +179,7 @@ void print_middle_node(FILE *fp)
 	    node_data[i].x, node_data[i].y, node_data[i].z);
 }
 
+/* print node data in Adventure .msh format */
 void print_node_adv(FILE *fp)
 {
   int i;
