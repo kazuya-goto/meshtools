@@ -1,0 +1,40 @@
+PREFIX = $(HOME)/hecmw
+BINDIR = $(PREFIX)/bin
+
+#CC = bcc32
+CC = cl
+
+#WARNFLAGS = -w
+WARNFLAGS = -Wall
+#DEBUGFLAGS = -g
+#OPTFLAGS = -O3 -fomit-frame-pointer -ffast-math -funroll-loops
+
+CFLAGS = $(WARNFLAGS) $(DEBUGFLAGS) $(OPTFLAGS)
+LDFLAGS =
+
+PROGS = rf341to342 sd342to341 meshcount fstr2adv
+
+.SUFFIXES: .c .obj
+
+.c.obj:
+	$(CC) -c $(CFLAGS) $<
+
+all: $(PROGS)
+
+rf341to342: rf341to342.obj util.obj meshio.obj nodedata.obj edgedata.obj elemdata.obj
+	$(CC) $(CFLAGS) $^ $(LDFLAGS)
+
+sd342to341: sd342to341.obj util.obj meshio.obj nodedata.obj
+	$(CC) $(CFLAGS) $^ $(LDFLAGS)
+
+meshcount: meshcount.obj util.obj meshio.obj
+	$(CC) $(CFLAGS) $^ $(LDFLAGS)
+
+fstr2adv: fstr2adv.obj util.obj meshio.obj nodedata.obj elemdata.obj
+	$(CC) $(CFLAGS) $^ $(LDFLAGS)
+
+clean:
+	rm -f $(PROGS) *.o *.obj *.tds *~ *.exe
+
+install: all
+	cp $(PROGS) $(BINDIR)
