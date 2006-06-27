@@ -48,7 +48,7 @@ void meshio_finalize(void)
    return value is the pointer to the line.
    either COMMENT, HEADER or DATA is set to *mode, and
    either NODE, ELEMENT, NGROUP, EGROUP or OTHER is set to *header */
-const char *meshio_readline(int *mode, int *header)
+char *meshio_readline(int *mode, int *header)
 {
   if (!fgets(line, maxlen, meshfile))
     return NULL;
