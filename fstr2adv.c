@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>      /* for time(), clock() and ctime() */
+#include <assert.h>
 #include "util.h"
 #include "meshio.h"
 #include "nodedata.h"
@@ -123,7 +124,8 @@ int main(int argc, char *argv[])
       continue;
     }
 
-    /* now mode==DATA */
+    assert(mode == DATA);
+
     if (header == NODE) {
       int node_id;
       double x, y, z;

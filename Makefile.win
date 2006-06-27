@@ -1,13 +1,14 @@
 PREFIX = $(HOME)/hecmw
 BINDIR = $(PREFIX)/bin
 
-#CC = bcc32
-CC = cl
+CC = bcc32
+#CC = cl
 
-#WARNFLAGS = -w
-WARNFLAGS = -Wall
+WARNFLAGS = -w
+#WARNFLAGS = -Wall
 #DEBUGFLAGS = -g
-#OPTFLAGS = -O3 -fomit-frame-pointer -ffast-math -funroll-loops
+#DEBUGFLAGS = -DNDEBUG
+OPTFLAGS = -O2
 
 CFLAGS = $(WARNFLAGS) $(DEBUGFLAGS) $(OPTFLAGS)
 LDFLAGS =

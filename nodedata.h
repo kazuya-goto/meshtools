@@ -1,6 +1,8 @@
 #ifndef NODEDATA_H
 #define NODEDATA_H
 
+#include <stdio.h>
+
 extern void node_init(void);
 extern void node_finalize(void);
 extern void new_node(int id, double x, double y, double z);

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "util.h"
 #include "meshio.h"
 
@@ -68,7 +69,8 @@ int main(int argc, char *argv[])
     if (mode == COMMENT) continue;
     if (mode == HEADER) continue;
 
-    /* now mode==DATA */
+    assert(mode == DATA);
+
     if (header == NODE) n_node++;
     else if (header == ELEMENT) n_elem++;
   }

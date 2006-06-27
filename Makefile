@@ -4,8 +4,9 @@ BINDIR = $(PREFIX)/bin
 CC = gcc
 
 WARNFLAGS = -Wall -W -pedantic -ansi
-DEBUGFLAGS = -g
-#OPTFLAGS = -O3 -fomit-frame-pointer -ffast-math -funroll-loops
+#DEBUGFLAGS = -g
+DEBUGFLAGS = -DNDEBUG
+OPTFLAGS = -O2
 
 CFLAGS = $(WARNFLAGS) $(DEBUGFLAGS) $(OPTFLAGS)
 LDFLAGS =

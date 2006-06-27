@@ -1,8 +1,10 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <stdio.h>
+
 extern void setprogname(const char *str);
-extern char *progname(void);
-extern void print_log(FILE *fp, char *log_mesg);
+extern const char *progname(void);
+extern void print_log(FILE *fp, const char *log_mesg);
 
 #endif /* UTIL_H */

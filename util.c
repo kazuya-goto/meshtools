@@ -33,12 +33,12 @@ void setprogname(const char *str)
   strcpy(name, p);
 }
 
-char *progname(void)
+const char *progname(void)
 {
   return name;
 }
 
-void print_log(FILE *fp, char *log_mesg)
+void print_log(FILE *fp, const char *log_mesg)
 {
   time_t t;
   char date_str[32];
