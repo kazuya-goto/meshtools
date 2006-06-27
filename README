@@ -1,6 +1,6 @@
 meshtools: Mesh tools for FrontSTR
 
-<Description>
+<DESCRIPTION>
 'meshtools' includes three programs:
 1. sd342to341: subdevide 342 element into 8 341 elements, trying to
                keep aspect ratio as small as possible.
@@ -9,36 +9,42 @@ meshtools: Mesh tools for FrontSTR
 	       new middle nodes.
 3. meshcount: count the number of nodes and elements
 
-Note that sd342to341 and rf341to342 require high disk IO load. When
-you are to convert a large scale mesh file, you'd better use the local
-file system (not NFS file system).
+<COMPILATION>
+Edit Makefile as needed and run 'make'.
 
-<Compilation>
-Edit Makefile and run 'make'.
+<HOW TO RUN>
+$ sd342to341 [from_file [to_file]]
+$ rf341to342 [from_file [to_file]]
 
-<How to run>
-$ sd342to341 from_file to_file
-$ rf341to342 from_file to_file
-$ meshcount mesh_file
+If to_file is ommited, output goes to STDOUT.
+If from_file is also ommited, input is read from STDIN.
 
-<Example>
+$ meshcount [mesh_file]
+
+If mesh_file is ommited, input is read from STDIN.
+
+<EXAMPLE>
 If you have a FrontSTR mesh with 342 elements, for example A342.msh,
-you can obtain a fine mesh with 8 times as many elements as the
-original one by the following commands:
+you can obtain a fine mesh, with 8 times as many elements as the
+original, with the following commands:
 
 $ sd342to341 A342.msh A342-341.msh
 $ rf341to342 A342-341.msh A342-refined.msh
 
-You can check the number of nodes and elements by
+You can also do the same thing at onece:
+
+$ sd342to341 A342.msh | rf341to342 > A342-refined.msh
+
+You can check the number of nodes and elements with
 
 $ meshcount A342-refined.msh
 
-<Known bugs>
-If there is more than one !ELEMENT header, the program dies with
-SIGSEGV. Since the mesh conversion programs assume that the mesh
-consists of only one type of elements, do not use more than one header
-line for !ELEMENT.
+<KNOWN ISSUES>
+- The mesh conversion programs assume that the mesh consists of only one
+  type of elements.
+- ELEMENT section has to be after NODE section.
 
 
 Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
-Date: Mar 17, 2006
+Created: Mar 17, 2006
+Modified: Jun 27, 2006
