@@ -33,7 +33,17 @@ fstr2adv: util.o meshio.o nodedata.o elemdata.o fstr2adv.o
 	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
 
 clean:
-	rm -f $(PROGS) *.o *~ *.log *.tmp *.out *.exe
+	rm -f $(PROGS) *.o *~ *.log *.tmp *.out *.exe *.tar.gz
 
 install: all
 	cp $(PROGS) $(BINDIR)
+
+dist:
+	@ if [ -d meshtools ]; then rm -rf meshtools; fi
+	@ mkdir meshtools
+	@ cp Makefile *.c *.h README meshtools
+	@ DISTNAME=`svn info | grep Revision | perl -ne 'split;print "meshtools-r$$_[1].tar.gz";'`; \
+	if [ -f $$DISTNAME ]; then rm -f $$DISTNAME; fi; \
+	echo Creating $$DISTNAME; \
+	tar zcvf $$DISTNAME meshtools
+	@ rm -rf meshtools
