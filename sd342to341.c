@@ -43,6 +43,8 @@ int main(int argc, char *argv[])
   int header, header_prev = NONE;
   double armin = 1e+10; /* min of aspect ratio */
   double armax = 0;     /* max of aspect ratio */
+  int armin_elem_id = -1;
+  int armax_elem_id = -1;
   clock_t before_c, after_c;
 
   before_c = clock();
@@ -231,8 +233,14 @@ int main(int argc, char *argv[])
 	else
 	  ar = ndist47/ndist69;
       }
-      if (ar < armin) armin = ar;
-      if (ar > armax) armax = ar;
+      if (ar < armin) {
+	armin = ar;
+	armin_elem_id = elem_id;
+      }
+      if (ar > armax) {
+	armax = ar;
+	armax_elem_id = elem_id;
+      }
 
     } else if (header == EGROUP) {
       int elem_id;
@@ -258,7 +266,9 @@ int main(int argc, char *argv[])
 
   if (verbose) {
     print_log(stderr, "mesh-type conversion completed.");
-    fprintf(stderr, "aspect ratio: min = %f, max = %f\n", armin, armax);
+    fprintf(stderr,
+	    "aspect ratio: min = %f (elemID: %d), max = %f (elemID: %d)\n",
+	    armin, armin_elem_id, armax, armax_elem_id);
 
     after_c = clock();
     fprintf(stderr, " Total time: %.2f sec\n",
