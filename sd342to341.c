@@ -17,6 +17,8 @@
 #include "meshio.h"
 #include "nodedata.h"
 
+#define BIG_ASPECT_RATIO 500
+
 static void usage(void)
 {
   fprintf(stderr,
@@ -240,6 +242,10 @@ int main(int argc, char *argv[])
       if (ar > armax) {
 	armax = ar;
 	armax_elem_id = elem_id;
+      }
+      if (ar > BIG_ASPECT_RATIO) {
+	fprintf(stderr, "warning: big aspect ratio: %f at elem %d\n",
+		ar, elem_id);
       }
 
     } else if (header == EGROUP) {
