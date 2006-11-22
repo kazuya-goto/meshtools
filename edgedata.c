@@ -27,7 +27,7 @@ typedef struct EdgeData {
 
 } EdgeData;
 
-enum { MAX_EDGE_INIT = 8, MAX_EDGE_GROW = 8 };
+enum { MAX_EDGE_INIT = 0, MAX_EDGE_GROW = 4 };
 
 static int n_node_init;
 static EdgeData *edge_data;
@@ -35,7 +35,7 @@ static EdgeData *edge_data;
 /* initialize edge_data */
 void edge_init(void)
 {
-  int i;
+  int i, alloc_size;
 
   n_node_init = number_of_nodes();
   if (n_node_init == 0) {
@@ -43,19 +43,23 @@ void edge_init(void)
     exit(1);
   }
 
-  edge_data = (EdgeData *) malloc(n_node_init * sizeof(EdgeData));
+  alloc_size = n_node_init * sizeof(EdgeData);
+  edge_data = (EdgeData *) malloc(alloc_size);
   if (edge_data == NULL) {
-    perror("in edge_init()");
+    perror("in edge_init() (1)");
+    fprintf(stderr, "malloc of %d bytes failed\n", alloc_size);
     exit(2);
   }
 
+  alloc_size = MAX_EDGE_INIT * sizeof(Edge);
   for (i = 0; i < n_node_init; i++) {
     edge_data[i].nid = get_global_node_id(i);
     edge_data[i].n_edge = 0;
     edge_data[i].n_edge_s = 0;
-    edge_data[i].edge = (Edge *) malloc(MAX_EDGE_INIT * sizeof(Edge));
+    edge_data[i].edge = (Edge *) malloc(alloc_size);
     if (edge_data[i].edge == NULL) {
-      perror("in edge_init()");
+      perror("in edge_init() (2)");
+      fprintf(stderr, "malloc of %d bytes failed\n", alloc_size);
       exit(2);
     }
     edge_data[i].max_edge = MAX_EDGE_INIT;
@@ -107,10 +111,13 @@ int middle_node(int i1, int i2, int *mnidp)
   /* not found: register as a new edge */
   if (edp->n_edge == edp->max_edge) {
     Edge *etmp;
+    int alloc_size;
 
-    etmp = (Edge *) realloc(edp->edge, (edp->max_edge + MAX_EDGE_GROW) * sizeof(Edge));
+    alloc_size = (edp->max_edge + MAX_EDGE_GROW) * sizeof(Edge);
+    etmp = (Edge *) realloc(edp->edge, alloc_size);
     if (etmp == NULL) {
       perror("in middle_node()");
+      fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
       exit(2);
     }
     edp->max_edge += MAX_EDGE_GROW;

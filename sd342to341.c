@@ -169,7 +169,8 @@ int main(int argc, char *argv[])
       }
       new_node(node_id, x, y, z);
 
-      fprintf(to_file, "%s", line);
+      /* fprintf(to_file, "%s", line); */
+      fprintf(to_file, "%d,%f,%f,%f\n", node_id, x, y, z);
 
     } else if (header == ELEMENT) {
       int elem_id, n[10];
@@ -182,10 +183,10 @@ int main(int argc, char *argv[])
 	fprintf(stderr, "Error: reading element data failed\n");
 	exit(1);
       }
-      fprintf(to_file, " %d, %d, %d, %d, %d\n"
-	      " %d, %d, %d, %d, %d\n"
-	      " %d, %d, %d, %d, %d\n"
-	      " %d, %d, %d, %d, %d\n",
+      fprintf(to_file, "%d,%d,%d,%d,%d\n"
+	      "%d,%d,%d,%d,%d\n"
+	      "%d,%d,%d,%d,%d\n"
+	      "%d,%d,%d,%d,%d\n",
 	      8*elem_id-7, n[0], n[6], n[5], n[7],
 	      8*elem_id-6, n[5], n[4], n[2], n[9],
 	      8*elem_id-5, n[6], n[1], n[4], n[8],
@@ -196,10 +197,10 @@ int main(int argc, char *argv[])
       ndist69 = node_dist2(n[6], n[9]);
 
       if (ndist47 < ndist58 && ndist47 < ndist69) {
-	fprintf(to_file, " %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n",
+	fprintf(to_file, "%d,%d,%d,%d,%d\n"
+		"%d,%d,%d,%d,%d\n"
+		"%d,%d,%d,%d,%d\n"
+		"%d,%d,%d,%d,%d\n",
 		8*elem_id-3, n[4], n[7], n[5], n[6],
 		8*elem_id-2, n[4], n[7], n[6], n[8],
 		8*elem_id-1, n[4], n[7], n[8], n[9],
@@ -209,10 +210,10 @@ int main(int argc, char *argv[])
 	else
 	  ar = ndist58/ndist47;
       } else if (ndist58 < ndist69) {
-	fprintf(to_file, " %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n",
+	fprintf(to_file, "%d,%d,%d,%d,%d\n"
+		"%d,%d,%d,%d,%d\n"
+		"%d,%d,%d,%d,%d\n"
+		"%d,%d,%d,%d,%d\n",
 		8*elem_id-3, n[5], n[8], n[6], n[4],
 		8*elem_id-2, n[5], n[8], n[4], n[9],
 		8*elem_id-1, n[5], n[8], n[9], n[7],
@@ -222,10 +223,10 @@ int main(int argc, char *argv[])
 	else
 	  ar = ndist47/ndist58;
       } else {
-	fprintf(to_file, " %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n"
-		" %d, %d, %d, %d, %d\n",
+	fprintf(to_file, "%d,%d,%d,%d,%d\n"
+		"%d,%d,%d,%d,%d\n"
+		"%d,%d,%d,%d,%d\n"
+		"%d,%d,%d,%d,%d\n",
 		8*elem_id-3, n[6], n[9], n[4], n[5],
 		8*elem_id-2, n[6], n[9], n[5], n[7],
 		8*elem_id-1, n[6], n[9], n[7], n[8],

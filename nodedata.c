@@ -17,7 +17,7 @@ typedef struct NodeData {
   double z;
 } NodeData;
 
-enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 2 };
+enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 1024 };
 
 static int n_node = 0;
 static int n_mnode = 0;
@@ -29,9 +29,13 @@ static int issorted = 1;
 /* initialize node_data */
 void node_init(void)
 {
-  node_data = (NodeData *) malloc(MAX_NODE_INIT * sizeof(NodeData));
+  int alloc_size;
+
+  alloc_size = MAX_NODE_INIT * sizeof(NodeData);
+  node_data = (NodeData *) malloc(alloc_size);
   if (node_data == NULL) {
     perror("in node_init()");
+    fprintf(stderr, "malloc of %d bytes failed\n", alloc_size);
     exit(2);
   }
   max_node = MAX_NODE_INIT;
@@ -48,14 +52,17 @@ void new_node(int id, double x, double y, double z)
 {
   if (n_node == max_node) {
     NodeData *ndp;
+    int alloc_size;
 
-    ndp = (NodeData *) realloc(node_data, MAX_NODE_GROW * max_node * sizeof(NodeData));
+    alloc_size = (max_node + MAX_NODE_GROW) * sizeof(NodeData);
+    ndp = (NodeData *) realloc(node_data, alloc_size);
     if (ndp == NULL) {
       perror("new_node()");
+      fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
       exit(2);
     }
 
-    max_node *= MAX_NODE_GROW;
+    max_node += MAX_NODE_GROW;
     node_data = ndp;
   }
 
@@ -175,7 +182,7 @@ void print_middle_node(FILE *fp)
 {
   int i;
   for (i = n_node - n_mnode; i < n_node; i++)
-    fprintf(fp, "%d, %f, %f, %f\n", node_data[i].id,
+    fprintf(fp, "%d,%f,%f,%f\n", node_data[i].id,
 	    node_data[i].x, node_data[i].y, node_data[i].z);
 }
 

@@ -191,7 +191,8 @@ int main(int argc, char *argv[])
       }
       new_node(node_id, x, y, z);
 
-      fprintf(to_file, "%s", line);
+      /* fprintf(to_file, "%s", line); */
+      fprintf(to_file, "%d,%f,%f,%f\n", node_id, x, y, z);
 
     } else if (header == ELEMENT) {
       int elem_id, n[10], dummy;

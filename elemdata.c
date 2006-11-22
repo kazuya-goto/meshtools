@@ -21,7 +21,7 @@ typedef struct ElemData342 {
   int n[10];
 } ElemData342;
 
-enum { MAX_ELEM_INIT = 64, MAX_ELEM_GROW = 2 };
+enum { MAX_ELEM_INIT = 1024, MAX_ELEM_GROW = 1024 };
 
 static int n_elem = 0;
 
@@ -33,9 +33,13 @@ static char *elem_header;
 /* initialize elem_data */
 void elem_init(const char *header)
 {
-  elem_data = (ElemData342 *) malloc(MAX_ELEM_INIT * sizeof(ElemData342));
+  int alloc_size;
+
+  alloc_size = MAX_ELEM_INIT * sizeof(ElemData342);
+  elem_data = (ElemData342 *) malloc(alloc_size);
   if (elem_data == NULL) {
     perror("in elem_init()");
+    fprintf(stderr, "malloc of %d bytes failed\n", alloc_size);
     exit(2);
   }
   max_elem = MAX_ELEM_INIT;
@@ -45,9 +49,11 @@ void elem_init(const char *header)
     return;
   }
 
-  elem_header = (char *) malloc((strlen(header)+1) * sizeof(char));
+  alloc_size = (strlen(header)+1) * sizeof(char);
+  elem_header = (char *) malloc(alloc_size);
   if (elem_header == NULL) {
     perror("in elem_init()");
+    fprintf(stderr, "malloc of %d bytes failed\n", alloc_size);
     exit(2);
   }
   strcpy(elem_header, header);
@@ -76,13 +82,16 @@ void new_elem(int id, const int *n)
 
   if (n_elem == max_elem) {
     ElemData342 *edp;
+    int alloc_size;
 
-    edp = (ElemData342 *) realloc(elem_data, MAX_ELEM_GROW * max_elem * sizeof(ElemData342));
+    alloc_size = (max_elem + MAX_ELEM_GROW) * sizeof(ElemData342);
+    edp = (ElemData342 *) realloc(elem_data, alloc_size);
     if (edp == NULL) {
       perror("in new_elem()");
+      fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
       exit(2);
     }
-    max_elem *= MAX_ELEM_GROW;
+    max_elem += MAX_ELEM_GROW;
     elem_data = edp;
   }
 
@@ -113,7 +122,7 @@ void print_elem(FILE *fp)
   for (i = 0; i < n_elem; i++) {
     fprintf(fp, "%d", elem_data[i].id);
     for (j = 0; j < npe; j++)
-      fprintf(fp, ", %d", elem_data[i].n[j]);
+      fprintf(fp, ",%d", elem_data[i].n[j]);
     fprintf(fp, "\n");
   }
 }
