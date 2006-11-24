@@ -17,7 +17,7 @@ typedef struct NodeData {
   double z;
 } NodeData;
 
-enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 1024 };
+enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 2 };
 
 static int n_node = 0;
 static int n_mnode = 0;
@@ -52,9 +52,10 @@ void new_node(int id, double x, double y, double z)
 {
   if (n_node == max_node) {
     NodeData *ndp;
-    int alloc_size;
+    int new_max, alloc_size;
 
-    alloc_size = (max_node + MAX_NODE_GROW) * sizeof(NodeData);
+    new_max = max_node * MAX_NODE_GROW;
+    alloc_size = new_max * sizeof(NodeData);
     ndp = (NodeData *) realloc(node_data, alloc_size);
     if (ndp == NULL) {
       perror("new_node()");
@@ -62,7 +63,7 @@ void new_node(int id, double x, double y, double z)
       exit(2);
     }
 
-    max_node += MAX_NODE_GROW;
+    max_node = new_max;
     node_data = ndp;
   }
 

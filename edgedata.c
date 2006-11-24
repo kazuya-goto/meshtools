@@ -27,7 +27,7 @@ typedef struct EdgeData {
 
 } EdgeData;
 
-enum { MAX_EDGE_INIT = 0, MAX_EDGE_GROW = 4 };
+enum { MAX_EDGE_INIT = 1, MAX_EDGE_GROW = 2 };
 
 static int n_node_init;
 static EdgeData *edge_data;
@@ -111,16 +111,17 @@ int middle_node(int i1, int i2, int *mnidp)
   /* not found: register as a new edge */
   if (edp->n_edge == edp->max_edge) {
     Edge *etmp;
-    int alloc_size;
+    int new_max, alloc_size;
 
-    alloc_size = (edp->max_edge + MAX_EDGE_GROW) * sizeof(Edge);
+    new_max = edp->max_edge * MAX_EDGE_GROW;
+    alloc_size = new_max * sizeof(Edge);
     etmp = (Edge *) realloc(edp->edge, alloc_size);
     if (etmp == NULL) {
       perror("in middle_node()");
       fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
       exit(2);
     }
-    edp->max_edge += MAX_EDGE_GROW;
+    edp->max_edge = new_max;
     edp->edge = etmp;
   }
 

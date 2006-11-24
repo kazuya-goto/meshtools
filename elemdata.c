@@ -21,7 +21,7 @@ typedef struct ElemData342 {
   int n[10];
 } ElemData342;
 
-enum { MAX_ELEM_INIT = 1024, MAX_ELEM_GROW = 1024 };
+enum { MAX_ELEM_INIT = 1024, MAX_ELEM_GROW = 2 };
 
 static int n_elem = 0;
 
@@ -82,16 +82,17 @@ void new_elem(int id, const int *n)
 
   if (n_elem == max_elem) {
     ElemData342 *edp;
-    int alloc_size;
+    int new_max, alloc_size;
 
-    alloc_size = (max_elem + MAX_ELEM_GROW) * sizeof(ElemData342);
+    new_max = max_elem * MAX_ELEM_GROW;
+    alloc_size = new_max * sizeof(ElemData342);
     edp = (ElemData342 *) realloc(elem_data, alloc_size);
     if (edp == NULL) {
       perror("in new_elem()");
       fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
       exit(2);
     }
-    max_elem += MAX_ELEM_GROW;
+    max_elem = new_max;
     elem_data = edp;
   }
 
