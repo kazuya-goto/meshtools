@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last Modified: Jun 03, 2006
+ * Last Modified: Nov 28, 2006
  *
  */
 #include <stdio.h>
@@ -176,6 +176,17 @@ int new_middle_node(int i1, int i2)
 	   0.5 * (n1p->z + n2p->z));
   n_mnode++;
   return mnid;
+}
+
+/* print node data of the last node in node_data */
+void print_last_node_data_line(FILE *fp)
+{
+  NodeData *n1p;
+  int rv;
+
+  n1p = &(node_data[n_node-1]);
+  rv = fprintf(fp, "%d,%f,%f,%f\n",
+               n1p->id, n1p->x, n1p->y, n1p->z);
 }
 
 /* print node data of middle nodes */

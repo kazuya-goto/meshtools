@@ -20,7 +20,7 @@ PROGS = rf341to342 sd342to341 meshcount fstr2adv
 
 all: $(PROGS)
 
-rf341to342: util.o meshio.o nodedata.o edgedata.o elemdata.o rf341to342.o
+rf341to342: util.o meshio.o nodedata.o edgedata.o rf341to342.o
 	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
 
 sd342to341: util.o meshio.o nodedata.o sd342to341.o

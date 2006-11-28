@@ -4,7 +4,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified on May 17, 2006
+ * Last modified on Nov 28, 2006
  *
  */
 #include <stdio.h>
@@ -16,7 +16,6 @@
 #include "meshio.h"
 #include "nodedata.h"
 #include "edgedata.h"
-#include "elemdata.h"
 
 static void usage(void)
 {
@@ -32,6 +31,8 @@ static void usage(void)
   exit(1);
 }
 
+#define BUFSIZE 4096
+
 int main(int argc, char *argv[])
 {
   int verbose = 0;
@@ -42,6 +43,9 @@ int main(int argc, char *argv[])
   int mode;
   int header, header_prev = NONE;
   clock_t before_c, after_c;
+
+  char tmpname[64];
+  FILE *tmp_file;
 
   before_c = clock();
 
@@ -94,6 +98,14 @@ int main(int argc, char *argv[])
     to_file = stdout;
   }
 
+  strcpy(tmpname, progname());
+  strcat(tmpname, ".tmp");
+  tmp_file = fopen(tmpname, "w+");
+  if (tmp_file == NULL) {
+    perror(tmpname);
+    exit(2);
+  }
+
   {
     time_t t;
     time(&t);
@@ -124,20 +136,19 @@ int main(int argc, char *argv[])
 	edge_init();
 
       } else if (header_prev == ELEMENT && header != ELEMENT) {
+	size_t rbytes;
+	char tmpbuf[BUFSIZE];
+
 	if (verbose) {
 	  print_log(stderr, "reading ELEMENT-part completed.");
 	  print_edge_stat(stderr);
 	}
 
 	if (verbose)
-	  print_log(stderr, "Writing middle-node data...");
-	print_middle_node(to_file);
-	if (verbose)
-	  print_log(stderr, "done.");
-
-	if (verbose)
-	  print_log(stderr, "Writing element data...");
-	print_elem(to_file);
+	  print_log(stderr, "Copying element data...");
+	rewind(tmp_file);
+	while ((rbytes = fread(tmpbuf, 1, sizeof(tmpbuf), tmp_file)) > 0)
+	  fwrite(tmpbuf, 1, rbytes, to_file);
 	if (verbose)
 	  print_log(stderr, "done.");
       }
@@ -165,8 +176,8 @@ int main(int argc, char *argv[])
 	if (header_prev != ELEMENT) {
 	  if (verbose)
 	    print_log(stderr, "Start reading ELEMENT-part...");
-	  elem_init(line);
 	}
+	fprintf(tmp_file, "%s", line);
 
       } else {
 	if (header_prev == NODE) {
@@ -195,7 +206,7 @@ int main(int argc, char *argv[])
       fprintf(to_file, "%d,%f,%f,%f\n", node_id, x, y, z);
 
     } else if (header == ELEMENT) {
-      int elem_id, n[10], dummy;
+      int elem_id, n[10], dummy, i;
 
       if (sscanf(line,
 		 "%d,%d,%d,%d,%d,%d",
@@ -205,27 +216,30 @@ int main(int argc, char *argv[])
 	exit(1);
       }
 
-      middle_node(n[1], n[2], &n[4]);
-      middle_node(n[0], n[2], &n[5]);
-      middle_node(n[0], n[1], &n[6]);
-      middle_node(n[0], n[3], &n[7]);
-      middle_node(n[1], n[3], &n[8]);
-      middle_node(n[2], n[3], &n[9]);
+      if (middle_node(n[1], n[2], &n[4])) print_last_node_data_line(to_file);
+      if (middle_node(n[0], n[2], &n[5])) print_last_node_data_line(to_file);
+      if (middle_node(n[0], n[1], &n[6])) print_last_node_data_line(to_file);
+      if (middle_node(n[0], n[3], &n[7])) print_last_node_data_line(to_file);
+      if (middle_node(n[1], n[3], &n[8])) print_last_node_data_line(to_file);
+      if (middle_node(n[2], n[3], &n[9])) print_last_node_data_line(to_file);
 
-      new_elem(elem_id, n); 
+      fprintf(tmp_file,"%d", elem_id);
+      for (i = 0; i < 10; i++)
+	fprintf(tmp_file, ",%d", n[i]);
+      fprintf(tmp_file, "\n");
 
     } else {
       fprintf(to_file, "%s", line);
     }
   }
 
-  elem_finalize();
   edge_finalize();
   node_finalize();
   meshio_finalize();
 
   if (from_file != stdin) fclose(from_file);
   if (to_file != stdout) fclose(to_file);
+  fclose(tmp_file);
 
   if (verbose) {
     print_log(stderr, "mesh-type conversion completed.");

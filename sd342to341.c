@@ -5,7 +5,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 10, 2006
- * Last modified on May 26, 2006
+ * Last modified on Nov 22, 2006
  *
  */
 #include <stdio.h>

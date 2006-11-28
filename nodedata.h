@@ -12,6 +12,7 @@ extern int number_of_middle_nodes(void);
 extern int get_local_node_id(int i1);
 extern int get_global_node_id(int li1);
 extern int new_middle_node(int i1, int i2);
+extern void print_last_node_data_line(FILE *fp);
 extern void print_middle_node(FILE *fp);
 extern void print_node_adv(FILE *fp);
 
