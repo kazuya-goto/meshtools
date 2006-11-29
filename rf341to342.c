@@ -4,7 +4,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified on Nov 28, 2006
+ * Last modified on Nov 29, 2006
  *
  */
 #include <stdio.h>
@@ -31,7 +31,7 @@ static void usage(void)
   exit(1);
 }
 
-#define BUFSIZE 4096
+enum { BUFSIZE = 4096 };
 
 int main(int argc, char *argv[])
 {

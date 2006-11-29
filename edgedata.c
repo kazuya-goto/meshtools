@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified: Nov 24, 2006
+ * Last modified: Nov 29, 2006
  *
  */
 #include <stdio.h>
