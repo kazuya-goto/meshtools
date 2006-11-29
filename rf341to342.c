@@ -133,6 +133,7 @@ int main(int argc, char *argv[])
       if (header_prev == NODE && header != NODE) {
 	if (verbose)
 	  print_log(stderr, "reading NODE-part completed.");
+	reduce_node_data();
 	edge_init();
 
       } else if (header_prev == ELEMENT && header != ELEMENT) {
@@ -216,12 +217,12 @@ int main(int argc, char *argv[])
 	exit(1);
       }
 
-      if (middle_node(n[1], n[2], &n[4])) print_last_node_data_line(to_file);
-      if (middle_node(n[0], n[2], &n[5])) print_last_node_data_line(to_file);
-      if (middle_node(n[0], n[1], &n[6])) print_last_node_data_line(to_file);
-      if (middle_node(n[0], n[3], &n[7])) print_last_node_data_line(to_file);
-      if (middle_node(n[1], n[3], &n[8])) print_last_node_data_line(to_file);
-      if (middle_node(n[2], n[3], &n[9])) print_last_node_data_line(to_file);
+      if (middle_node(n[1], n[2], &n[4])) print_last_middle_node(to_file);
+      if (middle_node(n[0], n[2], &n[5])) print_last_middle_node(to_file);
+      if (middle_node(n[0], n[1], &n[6])) print_last_middle_node(to_file);
+      if (middle_node(n[0], n[3], &n[7])) print_last_middle_node(to_file);
+      if (middle_node(n[1], n[3], &n[8])) print_last_middle_node(to_file);
+      if (middle_node(n[2], n[3], &n[9])) print_last_middle_node(to_file);
 
       fprintf(tmp_file,"%d", elem_id);
       for (i = 0; i < 10; i++)

@@ -27,7 +27,7 @@ typedef struct EdgeData {
 
 } EdgeData;
 
-enum { MAX_EDGE_INIT = 1, MAX_EDGE_GROW = 2 };
+enum { MAX_EDGE_GROW_LEN = 4 };
 
 static int n_node_init;
 static EdgeData *edge_data;
@@ -46,23 +46,17 @@ void edge_init(void)
   alloc_size = n_node_init * sizeof(EdgeData);
   edge_data = (EdgeData *) malloc(alloc_size);
   if (edge_data == NULL) {
-    perror("in edge_init() (1)");
+    perror("in edge_init()");
     fprintf(stderr, "malloc of %d bytes failed\n", alloc_size);
     exit(2);
   }
 
-  alloc_size = MAX_EDGE_INIT * sizeof(Edge);
   for (i = 0; i < n_node_init; i++) {
     edge_data[i].nid = get_global_node_id(i);
     edge_data[i].n_edge = 0;
     edge_data[i].n_edge_s = 0;
-    edge_data[i].edge = (Edge *) malloc(alloc_size);
-    if (edge_data[i].edge == NULL) {
-      perror("in edge_init() (2)");
-      fprintf(stderr, "malloc of %d bytes failed\n", alloc_size);
-      exit(2);
-    }
-    edge_data[i].max_edge = MAX_EDGE_INIT;
+    edge_data[i].edge = NULL;
+    edge_data[i].max_edge = 0;
   }
 }
 
@@ -74,6 +68,24 @@ void edge_finalize(void)
   for (i = 0; i < n_node_init; i++)
     free(edge_data[i].edge);
   free(edge_data);
+}
+
+/* resize edge_data */
+static void resize_edge(EdgeData *edp, int len)
+{
+  Edge *etmp;
+  int alloc_size;
+
+  alloc_size = len * sizeof(Edge);
+  etmp = (Edge *) realloc(edp->edge, alloc_size);
+  if (etmp == NULL) {
+    perror("resize_edge()");
+    fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
+    exit(2);
+  }
+  edp->max_edge = len;
+  edp->edge = etmp;
+  return;
 }
 
 /* Global node-ID of the middle node between nodes i1 and i2 (global
@@ -109,21 +121,8 @@ int middle_node(int i1, int i2, int *mnidp)
   }
 
   /* not found: register as a new edge */
-  if (edp->n_edge == edp->max_edge) {
-    Edge *etmp;
-    int new_max, alloc_size;
-
-    new_max = edp->max_edge * MAX_EDGE_GROW;
-    alloc_size = new_max * sizeof(Edge);
-    etmp = (Edge *) realloc(edp->edge, alloc_size);
-    if (etmp == NULL) {
-      perror("in middle_node()");
-      fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
-      exit(2);
-    }
-    edp->max_edge = new_max;
-    edp->edge = etmp;
-  }
+  if (edp->n_edge == edp->max_edge)
+    resize_edge(edp, edp->max_edge + MAX_EDGE_GROW_LEN);
 
   j = edp->n_edge;
   ep = &(edp->edge[j]);

@@ -20,8 +20,6 @@ typedef struct NodeData {
 enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 2 };
 
 static int n_node = 0;
-static int n_mnode = 0;
-
 static NodeData *node_data;
 static int max_node;
 static int issorted = 1;
@@ -47,25 +45,29 @@ void node_finalize(void)
   free(node_data);
 }
 
+/* resize node_data */
+static void resize_node_data(int len)
+{
+  NodeData *ndp;
+  int alloc_size;
+
+  alloc_size = len * sizeof(NodeData);
+  ndp = (NodeData *) realloc(node_data, alloc_size);
+  if (ndp == NULL) {
+    perror("resize_node_data()");
+    fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
+    exit(2);
+  }
+  max_node = len;
+  node_data = ndp;
+  return;
+}
+
 /* register a new node in node_data */
 void new_node(int id, double x, double y, double z)
 {
-  if (n_node == max_node) {
-    NodeData *ndp;
-    int new_max, alloc_size;
-
-    new_max = max_node * MAX_NODE_GROW;
-    alloc_size = new_max * sizeof(NodeData);
-    ndp = (NodeData *) realloc(node_data, alloc_size);
-    if (ndp == NULL) {
-      perror("new_node()");
-      fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
-      exit(2);
-    }
-
-    max_node = new_max;
-    node_data = ndp;
-  }
+  if (n_node == max_node)
+    resize_node_data(max_node * MAX_NODE_GROW);
 
   if (n_node > 0 && node_data[n_node-1].id >= id) {
     fprintf(stderr, "Warning: node id is not sorted\n");
@@ -78,6 +80,12 @@ void new_node(int id, double x, double y, double z)
   node_data[n_node].z = z;
 
   n_node++;
+}
+
+/* reduce the size of node_data */
+void reduce_node_data(void)
+{
+  resize_node_data(n_node);
 }
 
 /* node comparison, to be used by bsearch and qsort */
@@ -134,12 +142,6 @@ int number_of_nodes(void)
   return n_node;
 }
 
-/* return the number of middle-nodes */
-int number_of_middle_nodes(void)
-{
-  return n_mnode;
-}
-
 /* return the local nodeID of node i1 (globalID) */
 int get_local_node_id(int i1)
 {
@@ -160,42 +162,42 @@ int get_global_node_id(int li1)
   return node_data[li1].id;
 }
 
+
+static int n_mnode = 0;
+static NodeData middle_node; /* last added middle node */
+
+/* return the number of middle-nodes */
+int number_of_middle_nodes(void)
+{
+  return n_mnode;
+}
+
 /* register a middle node between i1 and i2 as a new node */
 int new_middle_node(int i1, int i2)
 {
-  int mnid;
   NodeData *n1p, *n2p;
 
-  mnid = node_data[n_node-1].id + 1;
+  if (n_mnode == 0)
+    middle_node.id = node_data[n_node-1].id + 1;
+  else
+    middle_node.id++;
+
   n1p = search_node(i1);
   n2p = search_node(i2);
 
-  new_node(mnid,
-	   0.5 * (n1p->x + n2p->x),
-	   0.5 * (n1p->y + n2p->y),
-	   0.5 * (n1p->z + n2p->z));
+  middle_node.x = 0.5 * (n1p->x + n2p->x);
+  middle_node.y = 0.5 * (n1p->y + n2p->y);
+  middle_node.z = 0.5 * (n1p->z + n2p->z);
   n_mnode++;
-  return mnid;
+
+  return middle_node.id;
 }
 
-/* print node data of the last node in node_data */
-void print_last_node_data_line(FILE *fp)
+/* print node data of the last middle node */
+void print_last_middle_node(FILE *fp)
 {
-  NodeData *n1p;
-  int rv;
-
-  n1p = &(node_data[n_node-1]);
-  rv = fprintf(fp, "%d,%f,%f,%f\n",
-               n1p->id, n1p->x, n1p->y, n1p->z);
-}
-
-/* print node data of middle nodes */
-void print_middle_node(FILE *fp)
-{
-  int i;
-  for (i = n_node - n_mnode; i < n_node; i++)
-    fprintf(fp, "%d,%f,%f,%f\n", node_data[i].id,
-	    node_data[i].x, node_data[i].y, node_data[i].z);
+  fprintf(fp, "%d,%f,%f,%f\n",
+	  middle_node.id, middle_node.x, middle_node.y, middle_node.z);
 }
 
 /* print node data in Adventure .msh format */
