@@ -5,7 +5,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 10, 2006
- * Last modified on Nov 22, 2006
+ * Last modified on Dec 1, 2006
  *
  */
 #include <stdio.h>
@@ -279,7 +279,7 @@ int main(int argc, char *argv[])
 
     after_c = clock();
     fprintf(stderr, " Total time: %.2f sec\n",
-	    (double) (after_c - before_c) / (double) CLOCKS_PER_SEC);
+	    (float) (after_c - before_c) / (float) CLOCKS_PER_SEC);
   }
 
   return 0;

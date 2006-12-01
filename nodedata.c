@@ -3,18 +3,20 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last Modified: Nov 29, 2006
+ * Last Modified: Dec 1, 2006
  *
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include "nodedata.h"
 
+typedef float coord_t;
+
 typedef struct NodeData {
   int id;
-  double x;
-  double y;
-  double z;
+  coord_t x;
+  coord_t y;
+  coord_t z;
 } NodeData;
 
 enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 2 };
@@ -75,9 +77,9 @@ void new_node(int id, double x, double y, double z)
   }
 
   node_data[n_node].id = id;
-  node_data[n_node].x = x;
-  node_data[n_node].y = y;
-  node_data[n_node].z = z;
+  node_data[n_node].x = (coord_t) x;
+  node_data[n_node].y = (coord_t) y;
+  node_data[n_node].z = (coord_t) z;
 
   n_node++;
 }
@@ -131,7 +133,7 @@ double node_dist2(int i1, int i2)
 
   n1p = search_node(i1);
   n2p = search_node(i2);
-  return (n1p->x - n2p->x)*(n1p->x - n2p->x) +
+  return (double) (n1p->x - n2p->x)*(n1p->x - n2p->x) +
     (n1p->y - n2p->y)*(n1p->y - n2p->y) +
     (n1p->z - n2p->z)*(n1p->z - n2p->z);
 }

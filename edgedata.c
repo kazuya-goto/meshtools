@@ -145,7 +145,7 @@ void print_edge_stat(FILE *log_file)
   int min = 10000, max = 0;
   int sum = 0, sumg = 0;
   int n_node_actv = 0;
-  double avr;
+  float avr;
   int sum_max = 0;
   int i;
 
@@ -172,7 +172,7 @@ void print_edge_stat(FILE *log_file)
     n_node_actv++;
   }
 
-  avr = (double) sum / (double) n_node_actv;
+  avr = (float) sum / (float) n_node_actv;
 
   fprintf(log_file,
 	  "             initial number of nodes : %d\n"
@@ -183,5 +183,5 @@ void print_edge_stat(FILE *log_file)
 	  "             average number of edges : %f\n"
 	  "                used / allocated (%%) : %d / %d (%f%%)\n",
 	  n_node_init, n_node_actv, number_of_middle_nodes(), min, max, avr,
-	  sumg, sum_max, 100.0*(double)sumg/(double)sum_max);
+	  sumg, sum_max, 100.0*(float)sumg/(float)sum_max);
 }
