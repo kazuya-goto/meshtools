@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
   int header, header_prev = NONE;
   clock_t before_c, after_c;
 
-  char tmpname[64];
+  /* char tmpname[64]; */
   FILE *tmp_file;
 
   before_c = clock();
@@ -98,9 +98,12 @@ int main(int argc, char *argv[])
     to_file = stdout;
   }
 
+  /*
   strcpy(tmpname, progname());
   strcat(tmpname, ".tmp");
   tmp_file = fopen(tmpname, "w+");
+  */
+  tmp_file = tmpfile();
   if (tmp_file == NULL) {
     perror(tmpname);
     exit(2);
@@ -241,6 +244,7 @@ int main(int argc, char *argv[])
   if (from_file != stdin) fclose(from_file);
   if (to_file != stdout) fclose(to_file);
   fclose(tmp_file);
+  /* remove(tmpname); */
 
   if (verbose) {
     print_log(stderr, "mesh-type conversion completed.");
