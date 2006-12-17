@@ -9,85 +9,61 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nodedata.h"
-
-typedef float coord_t;
-
-typedef struct NodeData {
-  int id;
-  coord_t x;
-  coord_t y;
-  coord_t z;
-} NodeData;
+#include "util.h"
 
 enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 2 };
 
-static int n_node = 0;
-static NodeData *node_data;
-static int max_node;
-static int issorted = 1;
-
 /* initialize node_data */
-void node_init(void)
+void node_init(NodeDB *ndb)
 {
-  int alloc_size;
-
-  alloc_size = MAX_NODE_INIT * sizeof(NodeData);
-  node_data = (NodeData *) malloc(alloc_size);
-  if (node_data == NULL) {
-    perror("in node_init()");
-    fprintf(stderr, "malloc of %d bytes failed\n", alloc_size);
-    exit(2);
-  }
-  max_node = MAX_NODE_INIT;
+  ndb->n_node = 0;
+  ndb->node_data = (NodeData *) emalloc(MAX_NODE_INIT * sizeof(NodeData));
+  ndb->max_node = MAX_NODE_INIT;
+  ndb->issorted = 1;
+  ndb->n_mnode = 0;
 }
 
 /* finalize node_data */
-void node_finalize(void)
+void node_finalize(NodeDB *ndb)
 {
-  free(node_data);
+  ndb->n_node = 0;
+  free(ndb->node_data);
+  ndb->node_data = NULL;
+  ndb->max_node = 0;
+  ndb->issorted = 0;
+  ndb->n_mnode = 0;
 }
 
 /* resize node_data */
-static void resize_node_data(int len)
+static void resize_node_data(NodeDB *ndb, int len)
 {
-  NodeData *ndp;
-  int alloc_size;
-
-  alloc_size = len * sizeof(NodeData);
-  ndp = (NodeData *) realloc(node_data, alloc_size);
-  if (ndp == NULL) {
-    perror("resize_node_data()");
-    fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
-    exit(2);
-  }
-  max_node = len;
-  node_data = ndp;
-  return;
+  ndb->node_data = (NodeData *) erealloc(ndb->node_data, len * sizeof(NodeData));
+  ndb->max_node = len;
 }
 
 /* register a new node in node_data */
-void new_node(int id, double x, double y, double z)
+void new_node(NodeDB *ndb, int id, double x, double y, double z)
 {
-  if (n_node == max_node)
-    resize_node_data(max_node * MAX_NODE_GROW);
+  if (ndb->n_node == ndb->max_node)
+    resize_node_data(ndb, ndb->max_node * MAX_NODE_GROW);
 
-  if (n_node > 0 && node_data[n_node-1].id >= id) {
+  if (ndb->n_node > 0 && ndb->node_data[ndb->n_node-1].id >= id) {
     fprintf(stderr, "Warning: node id is not sorted\n");
-    issorted = 0;
+    ndb->issorted = 0;
   }
 
-  node_data[n_node].id = id;
-  node_data[n_node].x = (coord_t) x;
-  node_data[n_node].y = (coord_t) y;
-  node_data[n_node].z = (coord_t) z;
+  ndb->node_data[ndb->n_node].id = id;
+  ndb->node_data[ndb->n_node].x = (coord_t) x;
+  ndb->node_data[ndb->n_node].y = (coord_t) y;
+  ndb->node_data[ndb->n_node].z = (coord_t) z;
 
-  n_node++;
+  ndb->n_node++;
 }
 
 /* reduce the size of node_data */
-void reduce_node_data(void)
+void reduce_node_data(NodeDB *ndb)
 {
-  resize_node_data(n_node);
+  resize_node_data(ndb, ndb->n_node);
 }
 
 /* node comparison, to be used by bsearch and qsort */
@@ -104,19 +80,19 @@ static int node_compar(const void *vn1, const void *vn2)
 }
 
 /* find a node having globalID i1 */
-static NodeData *search_node(int i1)
+static NodeData *search_node(NodeDB *ndb, int i1)
 {
   NodeData node1, *n1p;
 
-  if (!issorted) {
+  if (!ndb->issorted) {
     fprintf(stderr, "start sorting node data... ");
-    qsort(node_data, n_node, sizeof(NodeData), node_compar);
+    qsort(ndb->node_data, ndb->n_node, sizeof(NodeData), node_compar);
     fprintf(stderr, "done.\n");
-    issorted = 1;
+    ndb->issorted = 1;
   }
 
   node1.id = i1;
-  n1p = bsearch(&node1, node_data, n_node, sizeof(NodeData), node_compar);
+  n1p = bsearch(&node1, ndb->node_data, ndb->n_node, sizeof(NodeData), node_compar);
   if (n1p == NULL) {
     fprintf(stderr,
             "Error: searching node id failed (node_id may not be sorted)\n"
@@ -127,85 +103,88 @@ static NodeData *search_node(int i1)
 }
 
 /* return a square of distance between two nodes */
-double node_dist2(int i1, int i2)
+double node_dist2(NodeDB *ndb, int i1, int i2)
 {
   NodeData *n1p, *n2p;
 
-  n1p = search_node(i1);
-  n2p = search_node(i2);
+  n1p = search_node(ndb, i1);
+  n2p = search_node(ndb, i2);
   return (double) (n1p->x - n2p->x)*(n1p->x - n2p->x) +
     (n1p->y - n2p->y)*(n1p->y - n2p->y) +
     (n1p->z - n2p->z)*(n1p->z - n2p->z);
 }
 
 /* return the number of nodes */
-int number_of_nodes(void)
+int number_of_nodes(const NodeDB *ndb)
 {
-  return n_node;
+  return ndb->n_node;
 }
 
 /* return the local nodeID of node i1 (globalID) */
-int get_local_node_id(int i1)
+int get_local_node_id(NodeDB *ndb, int i1)
 {
   int li1;
-  li1 = search_node(i1) - node_data;
-  if (node_data[li1].id != i1) {
+  li1 = search_node(ndb, i1) - ndb->node_data;
+  if (ndb->node_data[li1].id != i1) {
     fprintf(stderr, "Error: failed get_local_node_id; "
 	    "(node_data[%d].id = %d) != (i1 = %d)\n",
-	    li1, node_data[li1].id, i1);
+	    li1, ndb->node_data[li1].id, i1);
     exit(1);
   }
   return li1;
 }
 
 /* return the global nodeID of node li1 (localID) */
-int get_global_node_id(int li1)
+int get_global_node_id(const NodeDB *ndb, int li1)
 {
-  return node_data[li1].id;
+  return ndb->node_data[li1].id;
 }
 
 
-static int n_mnode = 0;
-static NodeData middle_node; /* last added middle node */
-
 /* return the number of middle-nodes */
-int number_of_middle_nodes(void)
+int number_of_middle_nodes(const NodeDB *ndb)
 {
-  return n_mnode;
+  return ndb->n_mnode;
 }
 
 /* register a middle node between i1 and i2 as a new node */
-int new_middle_node(int i1, int i2)
+int new_middle_node(NodeDB *ndb, int i1, int i2)
 {
   NodeData *n1p, *n2p;
 
-  if (n_mnode == 0)
-    middle_node.id = node_data[n_node-1].id + 1;
+  if (ndb->n_mnode == 0)
+    ndb->middle_node.id = ndb->node_data[ndb->n_node-1].id + 1;
   else
-    middle_node.id++;
+    ndb->middle_node.id++;
 
-  n1p = search_node(i1);
-  n2p = search_node(i2);
+  n1p = search_node(ndb, i1);
+  n2p = search_node(ndb, i2);
 
-  middle_node.x = 0.5 * (n1p->x + n2p->x);
-  middle_node.y = 0.5 * (n1p->y + n2p->y);
-  middle_node.z = 0.5 * (n1p->z + n2p->z);
-  n_mnode++;
+  ndb->middle_node.x = 0.5 * (n1p->x + n2p->x);
+  ndb->middle_node.y = 0.5 * (n1p->y + n2p->y);
+  ndb->middle_node.z = 0.5 * (n1p->z + n2p->z);
+  ndb->n_mnode++;
 
-  return middle_node.id;
+  return ndb->middle_node.id;
 }
 
 /* print node data of the last middle node */
-void print_last_middle_node(FILE *fp)
+void print_last_middle_node(const NodeDB *ndb, FILE *fp)
 {
   fprintf(fp, "%d,%f,%f,%f\n",
-	  middle_node.id, middle_node.x, middle_node.y, middle_node.z);
+	  ndb->middle_node.id,
+	  ndb->middle_node.x,
+	  ndb->middle_node.y,
+	  ndb->middle_node.z);
 }
 
 /* print node data in Adventure .msh format */
-void print_node_adv(FILE *fp)
+void print_node_adv(const NodeDB *ndb, FILE *fp)
 {
   int i;
-  for (i = 0; i < n_node; i++)
-    fprintf(fp, "%f %f %f\n", node_data[i].x, node_data[i].y, node_data[i].z);
+  for (i = 0; i < ndb->n_node; i++)
+    fprintf(fp, "%f %f %f\n",
+	    ndb->node_data[i].x,
+	    ndb->node_data[i].y,
+	    ndb->node_data[i].z);
 }

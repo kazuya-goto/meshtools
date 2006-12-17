@@ -3,96 +3,65 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified: Nov 29, 2006
+ * Last modified: Dec 13, 2006
  *
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include "nodedata.h"
 #include "edgedata.h"
-
-typedef struct Edge {
-  int onid; /* node id of the other end of the edge */
-  int mnid; /* node id of the middle node */
-} Edge;
-
-typedef struct EdgeData {
-  int nid;
-  int n_edge;  /* number of edges to nodes with greater node-ID *
-		* these nodes are recorded in edge[].           */
-  int n_edge_s; /* number of edges to nodes with smaller node-ID *
-		 * these nodes are not recorded.                 */
-  Edge *edge; /* edge detail */
-  int max_edge; /* allocated length of edge[] */
-
-} EdgeData;
+#include "util.h"
 
 enum { MAX_EDGE_GROW_LEN = 4 };
 
-static int n_node_init;
-static EdgeData *edge_data;
-
 /* initialize edge_data */
-void edge_init(void)
+void edge_init(EdgeDB *edb, NodeDB *ndb)
 {
-  int i, alloc_size;
+  int i;
 
-  n_node_init = number_of_nodes();
-  if (n_node_init == 0) {
+  edb->n_node_init = number_of_nodes(ndb);
+  if (edb->n_node_init == 0) {
     fprintf(stderr, "Error: node data not set\n");
     exit(1);
   }
 
-  alloc_size = n_node_init * sizeof(EdgeData);
-  edge_data = (EdgeData *) malloc(alloc_size);
-  if (edge_data == NULL) {
-    perror("in edge_init()");
-    fprintf(stderr, "malloc of %d bytes failed\n", alloc_size);
-    exit(2);
+  edb->edge_data = (EdgeData *) emalloc(edb->n_node_init * sizeof(EdgeData));
+
+  for (i = 0; i < edb->n_node_init; i++) {
+    edb->edge_data[i].nid = get_global_node_id(ndb, i);
+    edb->edge_data[i].n_edge = 0;
+    edb->edge_data[i].n_edge_s = 0;
+    edb->edge_data[i].edge = NULL;
+    edb->edge_data[i].max_edge = 0;
   }
 
-  for (i = 0; i < n_node_init; i++) {
-    edge_data[i].nid = get_global_node_id(i);
-    edge_data[i].n_edge = 0;
-    edge_data[i].n_edge_s = 0;
-    edge_data[i].edge = NULL;
-    edge_data[i].max_edge = 0;
-  }
+  edb->ndb = ndb;
 }
 
 /* finalize edge_data */
-void edge_finalize(void)
+void edge_finalize(EdgeDB *edb)
 {
   int i;
 
-  for (i = 0; i < n_node_init; i++)
-    free(edge_data[i].edge);
-  free(edge_data);
+  for (i = 0; i < edb->n_node_init; i++)
+    free(edb->edge_data[i].edge);
+  free(edb->edge_data);
+  edb->n_node_init = 0;
+  edb->ndb = NULL;
 }
 
 /* resize edge_data */
 static void resize_edge(EdgeData *edp, int len)
 {
-  Edge *etmp;
-  int alloc_size;
-
-  alloc_size = len * sizeof(Edge);
-  etmp = (Edge *) realloc(edp->edge, alloc_size);
-  if (etmp == NULL) {
-    perror("resize_edge()");
-    fprintf(stderr, "realloc of %d bytes failed\n", alloc_size);
-    exit(2);
-  }
+  edp->edge = (Edge *) erealloc(edp->edge, len * sizeof(Edge));
   edp->max_edge = len;
-  edp->edge = etmp;
-  return;
 }
 
 /* Global node-ID of the middle node between nodes i1 and i2 (global
    IDs) are set in *mnidp.
    Return value is 1 if the middle node is newly created, or 0 if the
    middle node already exists. */
-int middle_node(int i1, int i2, int *mnidp)
+int middle_node(EdgeDB *edb, int i1, int i2, int *mnidp)
 {
   int li1, li2; /* local IDs of i1 and i2 */
   EdgeData *edp;
@@ -109,8 +78,8 @@ int middle_node(int i1, int i2, int *mnidp)
     exit(1);
   }
 
-  li1 = get_local_node_id(i1);
-  edp = &(edge_data[li1]);
+  li1 = get_local_node_id(edb->ndb, i1);
+  edp = &(edb->edge_data[li1]);
 
   /* if the edge i1-i2 is registered, return the middle-node */
   for (j = 0; j < edp->n_edge; j++) {
@@ -128,18 +97,18 @@ int middle_node(int i1, int i2, int *mnidp)
   ep = &(edp->edge[j]);
 
   ep->onid = i2;
-  ep->mnid = new_middle_node(i1, i2);
+  ep->mnid = new_middle_node(edb->ndb, i1, i2);
   edp->n_edge++;
 
-  li2 = get_local_node_id(i2);
-  edge_data[li2].n_edge_s++;
+  li2 = get_local_node_id(edb->ndb, i2);
+  edb->edge_data[li2].n_edge_s++;
 
   *mnidp = ep->mnid;
   return 1; /* newly created */
 }
 
 /* print statistic data, just for interest. */
-void print_edge_stat(FILE *log_file)
+void print_edge_stat(const EdgeDB *edb, FILE *log_file)
 {
   int neg, ne;
   int min = 10000, max = 0;
@@ -149,15 +118,15 @@ void print_edge_stat(FILE *log_file)
   int sum_max = 0;
   int i;
 
-  for (i = 0; i < n_node_init; i++) {
-    neg = edge_data[i].n_edge;
-    ne = neg + edge_data[i].n_edge_s;
+  for (i = 0; i < edb->n_node_init; i++) {
+    neg = edb->edge_data[i].n_edge;
+    ne = neg + edb->edge_data[i].n_edge_s;
 
     /* for debugging...
     fprintf(log_file, "%d: %d ( %d / %d )\n",
 	    edge_data[i].nid, ne, neg, edge_data[i].max_edge);
     */
-    sum_max += edge_data[i].max_edge;
+    sum_max += edb->edge_data[i].max_edge;
 
     if (ne == 0) continue;
 
@@ -182,6 +151,9 @@ void print_edge_stat(FILE *log_file)
 	  "             maximum number of edges : %d\n"
 	  "             average number of edges : %f\n"
 	  "                used / allocated (%%) : %d / %d (%f%%)\n",
-	  n_node_init, n_node_actv, number_of_middle_nodes(), min, max, avr,
+	  edb->n_node_init,
+	  n_node_actv,
+	  number_of_middle_nodes(edb->ndb),
+	  min, max, avr,
 	  sumg, sum_max, 100.0*(float)sumg/(float)sum_max);
 }

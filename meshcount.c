@@ -4,7 +4,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 15, 2006
- * Last modified on May 19, 2006
+ * Last modified on Dec 16, 2006
  *
  */
 #include <stdio.h>
@@ -26,6 +26,7 @@ static void usage(void)
 int main(int argc, char *argv[])
 {
   FILE *mesh_file;
+  MeshIO mio;
   int mode;
   int header;
   int n_node = 0;
@@ -62,9 +63,9 @@ int main(int argc, char *argv[])
     mesh_file = stdin;
   }
 
-  meshio_init(mesh_file);
+  meshio_init(&mio, mesh_file);
 
-  while (meshio_readline(&mode, &header)) {
+  while (meshio_readline(&mio, &mode, &header)) {
 
     if (mode == COMMENT) continue;
     if (mode == HEADER) continue;
@@ -75,7 +76,7 @@ int main(int argc, char *argv[])
     else if (header == ELEMENT) n_elem++;
   }
 
-  meshio_finalize();
+  meshio_finalize(&mio);
   if (mesh_file != stdin) fclose(mesh_file);
 
   printf("%d nodes, %d elements\n", n_node, n_elem);

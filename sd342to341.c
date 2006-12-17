@@ -5,7 +5,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 10, 2006
- * Last modified on Dec 1, 2006
+ * Last modified on Dec 15, 2006
  *
  */
 #include <stdio.h>
@@ -16,10 +16,11 @@
 #include "util.h"
 #include "meshio.h"
 #include "nodedata.h"
+#include "refine.h"
 
 #define BIG_ASPECT_RATIO 500
 
-static void usage(void)
+void usage(void)
 {
   fprintf(stderr,
 	  "Usage: %s [OPTION] [SOURCE [DEST]]\n"
@@ -34,89 +35,166 @@ static void usage(void)
   exit(1);
 }
 
-int main(int argc, char *argv[])
+static void print_header(FILE *to_file, const char *from_file_name)
 {
-  int verbose = 0;
-  FILE *from_file;
-  char from_file_name[64];
-  FILE *to_file;
+  time_t t;
+  time(&t);
+  fprintf(to_file,
+	  "##############################################################\n"
+	  "# FrontSTR 341 mesh file subdevided by %s\n"
+	  "# Date: %s"
+	  "# Original 342 mesh: %s\n"
+	  "# CAUTION: The mesh may be wrong if you have BCs on surface.\n"
+	  "##############################################################\n",
+	  progname(), ctime(&t), from_file_name);
+}
+
+static void proceed_node_data(const char *line, NodeDB *ndb, FILE *to_file)
+{
+  int node_id;
+  double x, y, z;
+
+  if (sscanf(line, "%d,%lf,%lf,%lf", &node_id, &x, &y, &z) != 4) {
+    fprintf(stderr, "Error: reading node data failed\n");
+    exit(1);
+  }
+  new_node(ndb, node_id, x, y, z);
+
+  /* fprintf(to_file, "%s", line); */
+  fprintf(to_file, "%d,%f,%f,%f\n", node_id, x, y, z);
+}
+
+typedef struct ARStat {
+  double min; /* min of aspect ratio */
+  double max;     /* max of aspect ratio */
+  int min_elem_id;
+  int max_elem_id;
+} ARStat;
+
+static void arstat_init(ARStat *ars)
+{
+  ars->min = 1e+10;
+  ars->max = 0;
+  ars->min_elem_id = -1;
+  ars->max_elem_id = -1;
+}
+
+static void arstat_update(ARStat *ars, double ar, int elem_id)
+{
+  if (ar > BIG_ASPECT_RATIO) {
+    fprintf(stderr, "warning: big aspect ratio: %f at elem %d\n",
+	    ar, elem_id);
+  }
+  if (ar < ars->min) {
+    ars->min = ar;
+    ars->min_elem_id = elem_id;
+  }
+  if (ar > ars->max) {
+    ars->max = ar;
+    ars->max_elem_id = elem_id;
+  }
+}
+
+static void print_arstat(const ARStat *ars, FILE *fp)
+{
+  fprintf(fp,
+	  "aspect ratio: min = %f (elemID: %d), max = %f (elemID: %d)\n",
+	  ars->min, ars->min_elem_id, ars->max, ars->max_elem_id);
+
+}
+
+static void proceed_elem_data(const char *line,
+			      NodeDB *ndb,
+			      FILE *to_file,
+			      ARStat *ars)
+{
+  int elem_id, n[10];
+  double ndist47, ndist58, ndist69;
+  double ar;
+
+  if (sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
+	     &elem_id, &n[0], &n[1], &n[2], &n[3], &n[4],
+	     &n[5], &n[6], &n[7], &n[8], &n[9])
+      != 11) {
+    fprintf(stderr, "Error: reading element data failed\n");
+    exit(1);
+  }
+  fprintf(to_file, "%d,%d,%d,%d,%d\n"
+	  "%d,%d,%d,%d,%d\n"
+	  "%d,%d,%d,%d,%d\n"
+	  "%d,%d,%d,%d,%d\n",
+	  8*elem_id-7, n[0], n[6], n[5], n[7],
+	  8*elem_id-6, n[5], n[4], n[2], n[9],
+	  8*elem_id-5, n[6], n[1], n[4], n[8],
+	  8*elem_id-4, n[7], n[8], n[9], n[3]);
+
+  ndist47 = node_dist2(ndb, n[4], n[7]);
+  ndist58 = node_dist2(ndb, n[5], n[8]);
+  ndist69 = node_dist2(ndb, n[6], n[9]);
+
+  if (ndist47 < ndist58 && ndist47 < ndist69) {
+    fprintf(to_file, "%d,%d,%d,%d,%d\n"
+	    "%d,%d,%d,%d,%d\n"
+	    "%d,%d,%d,%d,%d\n"
+	    "%d,%d,%d,%d,%d\n",
+	    8*elem_id-3, n[4], n[7], n[5], n[6],
+	    8*elem_id-2, n[4], n[7], n[6], n[8],
+	    8*elem_id-1, n[4], n[7], n[8], n[9],
+	    8*elem_id, n[4], n[7], n[9], n[5]);
+    if (ndist58 < ndist69)
+      ar = ndist69/ndist47;
+    else
+      ar = ndist58/ndist47;
+  } else if (ndist58 < ndist69) {
+    fprintf(to_file, "%d,%d,%d,%d,%d\n"
+	    "%d,%d,%d,%d,%d\n"
+	    "%d,%d,%d,%d,%d\n"
+	    "%d,%d,%d,%d,%d\n",
+	    8*elem_id-3, n[5], n[8], n[6], n[4],
+	    8*elem_id-2, n[5], n[8], n[4], n[9],
+	    8*elem_id-1, n[5], n[8], n[9], n[7],
+	    8*elem_id, n[5], n[8], n[7], n[6]);
+    if (ndist47 < ndist69)
+      ar = ndist69/ndist58;
+    else
+      ar = ndist47/ndist58;
+  } else {
+    fprintf(to_file, "%d,%d,%d,%d,%d\n"
+	    "%d,%d,%d,%d,%d\n"
+	    "%d,%d,%d,%d,%d\n"
+	    "%d,%d,%d,%d,%d\n",
+	    8*elem_id-3, n[6], n[9], n[4], n[5],
+	    8*elem_id-2, n[6], n[9], n[5], n[7],
+	    8*elem_id-1, n[6], n[9], n[7], n[8],
+	    8*elem_id, n[6], n[9], n[8], n[4]);
+    if (ndist47 < ndist58)
+      ar = ndist58/ndist69;
+    else
+      ar = ndist47/ndist69;
+  }
+  arstat_update(ars, ar, elem_id);
+}
+
+void refine(FILE *from_file, const char *from_file_name,
+	    FILE *to_file, int verbose)
+{
   char *line;
   int mode;
   int header, header_prev = NONE;
-  double armin = 1e+10; /* min of aspect ratio */
-  double armax = 0;     /* max of aspect ratio */
-  int armin_elem_id = -1;
-  int armax_elem_id = -1;
-  clock_t before_c, after_c;
-
-  before_c = clock();
-
-  setprogname(argv[0]);
-  argc--;
-  argv++;
-
-  for (; argc > 0; argc--, argv++) {
-    if (argv[0][0] != '-')
-      break;
-    switch (argv[0][1]) {
-    case 'v':
-      verbose++;
-      break;
-    case 'h':
-      usage();
-    default:
-      fprintf(stderr, "Error: unknown option -%c\n", argv[0][1]);
-      usage();
-    }
-  }
-
-  if (argc > 2) {
-    fprintf(stderr, "Error: too many arguments\n");
-    usage();
-  }
+  MeshIO mio;
+  NodeDB nodeDB;
+  ARStat ars;
 
   if (verbose)
     print_log(stderr, "Starting mesh-type conversion...");
 
-  if (argc >= 1) {
-    from_file = fopen(argv[0], "r");
-    if (from_file == NULL) {
-      perror(argv[0]);
-      exit(2);
-    }
-    strcpy(from_file_name, argv[0]);
-  } else {
-    from_file = stdin;
-    strcpy(from_file_name, "stdin");
-  }
+  print_header(to_file, from_file_name);
 
-  if (argc == 2) {
-    to_file = fopen(argv[1], "w");
-    if (to_file == NULL) {
-      perror(argv[1]);
-      exit(2);
-    }
-  } else {
-    to_file = stdout;
-  }
+  meshio_init(&mio, from_file);
+  node_init(&nodeDB);
+  arstat_init(&ars);
 
-  {
-    time_t t;
-    time(&t);
-    fprintf(to_file,
-	    "##############################################################\n"
-	    "# FrontSTR 341 mesh file subdevided by %s\n"
-	    "# Date: %s"
-	    "# Original 342 mesh: %s\n"
-	    "# CAUTION: The mesh may be wrong if you have BCs on surface.\n"
-	    "##############################################################\n",
-	    progname(), ctime(&t), from_file_name);
-  }
-
-  meshio_init(from_file);
-  node_init();
-
-  while ((line = meshio_readline(&mode, &header)) != NULL) {
+  while ((line = meshio_readline(&mio, &mode, &header)) != NULL) {
 
     if (mode == COMMENT) {
       fprintf(to_file, "%s", line);
@@ -160,94 +238,10 @@ int main(int argc, char *argv[])
     assert(mode == DATA);
 
     if (header == NODE) {
-      int node_id;
-      double x, y, z;
-
-      if (sscanf(line, "%d,%lf,%lf,%lf", &node_id, &x, &y, &z) != 4) {
-	fprintf(stderr, "Error: reading node data failed\n");
-	exit(1);
-      }
-      new_node(node_id, x, y, z);
-
-      /* fprintf(to_file, "%s", line); */
-      fprintf(to_file, "%d,%f,%f,%f\n", node_id, x, y, z);
+      proceed_node_data(line, &nodeDB, to_file);
 
     } else if (header == ELEMENT) {
-      int elem_id, n[10];
-      double ndist47, ndist58, ndist69, ar;
-
-      if (sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-		 &elem_id, &n[0], &n[1], &n[2], &n[3], &n[4],
-		 &n[5], &n[6], &n[7], &n[8], &n[9])
-	  != 11) {
-	fprintf(stderr, "Error: reading element data failed\n");
-	exit(1);
-      }
-      fprintf(to_file, "%d,%d,%d,%d,%d\n"
-	      "%d,%d,%d,%d,%d\n"
-	      "%d,%d,%d,%d,%d\n"
-	      "%d,%d,%d,%d,%d\n",
-	      8*elem_id-7, n[0], n[6], n[5], n[7],
-	      8*elem_id-6, n[5], n[4], n[2], n[9],
-	      8*elem_id-5, n[6], n[1], n[4], n[8],
-	      8*elem_id-4, n[7], n[8], n[9], n[3]);
-
-      ndist47 = node_dist2(n[4], n[7]);
-      ndist58 = node_dist2(n[5], n[8]);
-      ndist69 = node_dist2(n[6], n[9]);
-
-      if (ndist47 < ndist58 && ndist47 < ndist69) {
-	fprintf(to_file, "%d,%d,%d,%d,%d\n"
-		"%d,%d,%d,%d,%d\n"
-		"%d,%d,%d,%d,%d\n"
-		"%d,%d,%d,%d,%d\n",
-		8*elem_id-3, n[4], n[7], n[5], n[6],
-		8*elem_id-2, n[4], n[7], n[6], n[8],
-		8*elem_id-1, n[4], n[7], n[8], n[9],
-		8*elem_id, n[4], n[7], n[9], n[5]);
-	if (ndist58 < ndist69)
-	  ar = ndist69/ndist47;
-	else
-	  ar = ndist58/ndist47;
-      } else if (ndist58 < ndist69) {
-	fprintf(to_file, "%d,%d,%d,%d,%d\n"
-		"%d,%d,%d,%d,%d\n"
-		"%d,%d,%d,%d,%d\n"
-		"%d,%d,%d,%d,%d\n",
-		8*elem_id-3, n[5], n[8], n[6], n[4],
-		8*elem_id-2, n[5], n[8], n[4], n[9],
-		8*elem_id-1, n[5], n[8], n[9], n[7],
-		8*elem_id, n[5], n[8], n[7], n[6]);
-	if (ndist47 < ndist69)
-	  ar = ndist69/ndist58;
-	else
-	  ar = ndist47/ndist58;
-      } else {
-	fprintf(to_file, "%d,%d,%d,%d,%d\n"
-		"%d,%d,%d,%d,%d\n"
-		"%d,%d,%d,%d,%d\n"
-		"%d,%d,%d,%d,%d\n",
-		8*elem_id-3, n[6], n[9], n[4], n[5],
-		8*elem_id-2, n[6], n[9], n[5], n[7],
-		8*elem_id-1, n[6], n[9], n[7], n[8],
-		8*elem_id, n[6], n[9], n[8], n[4]);
-	if (ndist47 < ndist58)
-	  ar = ndist58/ndist69;
-	else
-	  ar = ndist47/ndist69;
-      }
-      if (ar < armin) {
-	armin = ar;
-	armin_elem_id = elem_id;
-      }
-      if (ar > armax) {
-	armax = ar;
-	armax_elem_id = elem_id;
-      }
-      if (ar > BIG_ASPECT_RATIO) {
-	fprintf(stderr, "warning: big aspect ratio: %f at elem %d\n",
-		ar, elem_id);
-      }
+      proceed_elem_data(line, &nodeDB, to_file, &ars);
 
     } else if (header == EGROUP) {
       int elem_id;
@@ -265,22 +259,11 @@ int main(int argc, char *argv[])
     }
   }
 
-  node_finalize();
-  meshio_finalize();
-
-  if (from_file != stdin) fclose(from_file);
-  if (to_file != stdout) fclose(to_file);
+  node_finalize(&nodeDB);
+  meshio_finalize(&mio);
 
   if (verbose) {
     print_log(stderr, "mesh-type conversion completed.");
-    fprintf(stderr,
-	    "aspect ratio: min = %f (elemID: %d), max = %f (elemID: %d)\n",
-	    armin, armin_elem_id, armax, armax_elem_id);
-
-    after_c = clock();
-    fprintf(stderr, " Total time: %.2f sec\n",
-	    (float) (after_c - before_c) / (float) CLOCKS_PER_SEC);
+    print_arstat(&ars, stderr);
   }
-
-  return 0;
 }
