@@ -3,7 +3,7 @@
  *
  * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last Modified: Dec 1, 2006
+ * Last Modified: Feb 5, 2007
  *
  */
 #include <stdio.h>
@@ -112,6 +112,33 @@ double node_dist2(NodeDB *ndb, int i1, int i2)
   return (double) (n1p->x - n2p->x)*(n1p->x - n2p->x) +
     (n1p->y - n2p->y)*(n1p->y - n2p->y) +
     (n1p->z - n2p->z)*(n1p->z - n2p->z);
+}
+
+double penta_vol(NodeDB *ndb, int i0, int i1, int i2, int i3)
+{
+  NodeData *np[4];
+  double v1[3], v2[3], v3[3];
+
+  np[0] = search_node(ndb, i0);
+  np[1] = search_node(ndb, i1);
+  np[2] = search_node(ndb, i2);
+  np[3] = search_node(ndb, i3);
+
+  v1[0] = np[1]->x - np[0]->x;
+  v1[1] = np[1]->y - np[0]->y;
+  v1[2] = np[1]->z - np[0]->z;
+
+  v2[0] = np[2]->x - np[0]->x;
+  v2[1] = np[2]->y - np[0]->y;
+  v2[2] = np[2]->z - np[0]->z;
+
+  v3[0] = np[3]->x - np[0]->x;
+  v3[1] = np[3]->y - np[0]->y;
+  v3[2] = np[3]->z - np[0]->z;
+
+  return ((v1[1] * v2[2] - v1[2] * v2[1]) * v3[0] +
+	  (v1[2] * v2[0] - v1[0] * v2[2]) * v3[1] +
+	  (v1[0] * v2[1] - v1[1] * v2[0]) * v3[2]) / 6.0;
 }
 
 /* return the number of nodes */
