@@ -103,10 +103,11 @@ static void print_arstat(const ARStat *ars, FILE *fp)
 
 }
 
-static void volcheck(int eid, int n0, int n1, int n2, int n3, NodeDB *ndb)
+static void volcheck(int eid, int n,
+		     int n0, int n1, int n2, int n3, NodeDB *ndb)
 {
   if (penta_vol(ndb, n0, n1, n2, n3) <= 0)
-    fprintf(stderr, "Warning: negative volume: elem.%d\n", eid);
+    fprintf(stderr, "Warning: negative volume: elem.%d-%d\n", eid, n);
 }
 
 static void proceed_elem_data(const char *line,
@@ -134,10 +135,10 @@ static void proceed_elem_data(const char *line,
 	  8*elem_id-5, n[5], n[4], n[2], n[9],
 	  8*elem_id-4, n[7], n[8], n[9], n[3]);
 
-  volcheck(8*elem_id-7, n[0], n[6], n[5], n[7], ndb);
-  volcheck(8*elem_id-6, n[6], n[1], n[4], n[8], ndb);
-  volcheck(8*elem_id-5, n[5], n[4], n[2], n[9], ndb);
-  volcheck(8*elem_id-4, n[7], n[8], n[9], n[3], ndb);
+  volcheck(elem_id, 1, n[0], n[6], n[5], n[7], ndb);
+  volcheck(elem_id, 2, n[6], n[1], n[4], n[8], ndb);
+  volcheck(elem_id, 3, n[5], n[4], n[2], n[9], ndb);
+  volcheck(elem_id, 4, n[7], n[8], n[9], n[3], ndb);
 
   ndist47 = node_dist2(ndb, n[4], n[7]);
   ndist58 = node_dist2(ndb, n[5], n[8]);
@@ -153,10 +154,10 @@ static void proceed_elem_data(const char *line,
 	    8*elem_id-1, n[4], n[7], n[8], n[9],
 	    8*elem_id, n[4], n[7], n[9], n[5]);
 
-    volcheck(8*elem_id-3, n[4], n[7], n[5], n[6], ndb);
-    volcheck(8*elem_id-2, n[4], n[7], n[6], n[8], ndb);
-    volcheck(8*elem_id-1, n[4], n[7], n[8], n[9], ndb);
-    volcheck(8*elem_id, n[4], n[7], n[9], n[5], ndb);
+    volcheck(elem_id, 5, n[4], n[7], n[5], n[6], ndb);
+    volcheck(elem_id, 6, n[4], n[7], n[6], n[8], ndb);
+    volcheck(elem_id, 7, n[4], n[7], n[8], n[9], ndb);
+    volcheck(elem_id, 8, n[4], n[7], n[9], n[5], ndb);
 
     if (ndist58 < ndist69)
       ar = ndist69/ndist47;
@@ -172,10 +173,10 @@ static void proceed_elem_data(const char *line,
 	    8*elem_id-1, n[5], n[8], n[9], n[7],
 	    8*elem_id, n[5], n[8], n[7], n[6]);
 
-    volcheck(8*elem_id-3, n[5], n[8], n[6], n[4], ndb);
-    volcheck(8*elem_id-2, n[5], n[8], n[4], n[9], ndb);
-    volcheck(8*elem_id-1, n[5], n[8], n[9], n[7], ndb);
-    volcheck(8*elem_id, n[5], n[8], n[7], n[6], ndb);
+    volcheck(elem_id, 5, n[5], n[8], n[6], n[4], ndb);
+    volcheck(elem_id, 6, n[5], n[8], n[4], n[9], ndb);
+    volcheck(elem_id, 7, n[5], n[8], n[9], n[7], ndb);
+    volcheck(elem_id, 8, n[5], n[8], n[7], n[6], ndb);
 
     if (ndist47 < ndist69)
       ar = ndist69/ndist58;
@@ -191,10 +192,10 @@ static void proceed_elem_data(const char *line,
 	    8*elem_id-1, n[6], n[9], n[7], n[8],
 	    8*elem_id, n[6], n[9], n[8], n[4]);
 
-    volcheck(8*elem_id-3, n[6], n[9], n[4], n[5], ndb);
-    volcheck(8*elem_id-2, n[6], n[9], n[5], n[7], ndb);
-    volcheck(8*elem_id-1, n[6], n[9], n[7], n[8], ndb);
-    volcheck(8*elem_id, n[6], n[9], n[8], n[4], ndb);
+    volcheck(elem_id, 5, n[6], n[9], n[4], n[5], ndb);
+    volcheck(elem_id, 6, n[6], n[9], n[5], n[7], ndb);
+    volcheck(elem_id, 7, n[6], n[9], n[7], n[8], ndb);
+    volcheck(elem_id, 8, n[6], n[9], n[8], n[4], ndb);
 
     if (ndist47 < ndist58)
       ar = ndist58/ndist69;
