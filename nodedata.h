@@ -27,6 +27,7 @@ extern void new_node(NodeDB *ndb, int id, double x, double y, double z);
 extern void reduce_node_data(NodeDB *ndb);
 extern double node_dist2(NodeDB *ndb, int i1, int i2);
 extern double penta_vol(NodeDB *ndb, int i0, int i1, int i2, int i3);
+extern void node_coord(NodeDB *ndb, int id, double *x, double *y, double *z);
 extern int number_of_nodes(const NodeDB *ndb);
 extern int get_local_node_id(NodeDB *ndb, int i1);
 extern int get_global_node_id(const NodeDB *ndb, int li1);

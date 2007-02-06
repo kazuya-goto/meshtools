@@ -141,6 +141,16 @@ double penta_vol(NodeDB *ndb, int i0, int i1, int i2, int i3)
 	  (v1[0] * v2[1] - v1[1] * v2[0]) * v3[2]) / 6.0;
 }
 
+void node_coord(NodeDB *ndb, int id, double *x, double *y, double *z)
+{
+  NodeData *np;
+
+  np = search_node(ndb, id);
+  *x = np->x;
+  *y = np->y;
+  *z = np->z;
+}
+
 /* return the number of nodes */
 int number_of_nodes(const NodeDB *ndb)
 {
