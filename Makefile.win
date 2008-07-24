@@ -1,8 +1,9 @@
 PREFIX = $(HOME)/hecmw
 BINDIR = $(PREFIX)/bin
 
-CC = bcc32
-#CC = cl
+CC = cl
+#CC = icl
+#CC = bcc32
 
 WARNFLAGS = -w
 #WARNFLAGS = -Wall
@@ -22,16 +23,16 @@ PROGS = rf341to342 sd342to341 meshcount fstr2adv
 
 all: $(PROGS)
 
-rf341to342: rf341to342.obj util.obj meshio.obj nodedata.obj edgedata.obj
+rf341to342: rf341to342.obj util.obj meshio.obj nodedata.obj edgedata.obj main.obj
 	$(CC) $(CFLAGS) $^ $(LDFLAGS)
 
-sd342to341: sd342to341.obj util.obj meshio.obj nodedata.obj
+sd342to341: sd342to341.obj util.obj meshio.obj nodedata.obj main.obj
 	$(CC) $(CFLAGS) $^ $(LDFLAGS)
 
 meshcount: meshcount.obj util.obj meshio.obj
 	$(CC) $(CFLAGS) $^ $(LDFLAGS)
 
-fstr2adv: fstr2adv.obj util.obj meshio.obj nodedata.obj elemdata.obj
+fstr2adv: fstr2adv.obj util.obj meshio.obj nodedata.obj elemdata.obj main.obj
 	$(CC) $(CFLAGS) $^ $(LDFLAGS)
 
 clean:
