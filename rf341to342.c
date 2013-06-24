@@ -49,9 +49,9 @@ static void print_header(FILE *to_file, const char *from_file_name)
 static void proceed_node_data(const char *line, NodeDB *ndb, FILE *to_file)
 {
   int node_id;
-  double x, y, z;
+  coord_t x, y, z;
 
-  if (sscanf(line, "%d,%lf,%lf,%lf", &node_id, &x, &y, &z) != 4) {
+  if (sscanf(line, "%d,%f,%f,%f", &node_id, &x, &y, &z) != 4) {
     fprintf(stderr, "Error: reading node data failed\n");
     exit(1);
   }
