@@ -12,7 +12,7 @@
 #include "util.h"
 
 struct NodeData {
-  int id;
+  index_t id;
   coord_t x;
   coord_t y;
   coord_t z;
@@ -21,11 +21,11 @@ struct NodeData {
 typedef struct NodeData NodeData;
 
 struct NodeDB {
-  int n_node;
+  index_t n_node;
   NodeData *node_data;
-  int max_node;
+  index_t max_node;
   int issorted;
-  int n_mnode;
+  index_t n_mnode;
   NodeData middle_node; /* last added middle node */
 };
 
@@ -61,14 +61,14 @@ void node_finalize(NodeDB *ndb)
 }
 
 /* resize node_data */
-static void resize_node_data(NodeDB *ndb, int len)
+static void resize_node_data(NodeDB *ndb, size_t len)
 {
   ndb->node_data = (NodeData *) erealloc(ndb->node_data, len * sizeof(NodeData));
   ndb->max_node = len;
 }
 
 /* register a new node in node_data */
-void new_node(NodeDB *ndb, int id, coord_t x, coord_t y, coord_t z)
+void new_node(NodeDB *ndb, index_t id, coord_t x, coord_t y, coord_t z)
 {
   if (ndb->n_node == ndb->max_node)
     resize_node_data(ndb, ndb->max_node * MAX_NODE_GROW);
@@ -106,7 +106,7 @@ static int node_compar(const void *vn1, const void *vn2)
 }
 
 /* find a node having globalID i1 */
-static NodeData *search_node(NodeDB *ndb, int i1)
+static NodeData *search_node(NodeDB *ndb, index_t i1)
 {
   NodeData node1, *n1p;
 
@@ -122,14 +122,14 @@ static NodeData *search_node(NodeDB *ndb, int i1)
   if (n1p == NULL) {
     fprintf(stderr,
             "Error: searching node id failed (node_id may not be sorted)\n"
-	    " could not find data for node %d\n", i1);
+	    " could not find data for node %lld\n", i1);
     exit(1);
   }
   return n1p;
 }
 
 /* return a square of distance between two nodes */
-coord_t node_dist2(NodeDB *ndb, int i1, int i2)
+coord_t node_dist2(NodeDB *ndb, index_t i1, index_t i2)
 {
   NodeData *n1p, *n2p;
   coord_t dx, dy, dz;
@@ -142,7 +142,7 @@ coord_t node_dist2(NodeDB *ndb, int i1, int i2)
   return dx*dx + dy*dy + dz*dz;
 }
 
-coord_t penta_vol(NodeDB *ndb, int i0, int i1, int i2, int i3)
+coord_t penta_vol(NodeDB *ndb, index_t i0, index_t i1, index_t i2, index_t i3)
 {
   NodeData *np[4];
   coord_t v1[3], v2[3], v3[3];
@@ -169,7 +169,7 @@ coord_t penta_vol(NodeDB *ndb, int i0, int i1, int i2, int i3)
 	  (v1[0] * v2[1] - v1[1] * v2[0]) * v3[2]) / 6.0;
 }
 
-void node_coord(NodeDB *ndb, int id, coord_t *x, coord_t *y, coord_t *z)
+void node_coord(NodeDB *ndb, index_t id, coord_t *x, coord_t *y, coord_t *z)
 {
   NodeData *np;
 
@@ -180,19 +180,19 @@ void node_coord(NodeDB *ndb, int id, coord_t *x, coord_t *y, coord_t *z)
 }
 
 /* return the number of nodes */
-int number_of_nodes(const NodeDB *ndb)
+index_t number_of_nodes(const NodeDB *ndb)
 {
   return ndb->n_node;
 }
 
 /* return the local nodeID of node i1 (globalID) */
-int get_local_node_id(NodeDB *ndb, int i1)
+index_t get_local_node_id(NodeDB *ndb, index_t i1)
 {
-  int li1;
+  index_t li1;
   li1 = search_node(ndb, i1) - ndb->node_data;
   if (ndb->node_data[li1].id != i1) {
     fprintf(stderr, "Error: failed get_local_node_id; "
-	    "(node_data[%d].id = %d) != (i1 = %d)\n",
+	    "(node_data[%lld].id = %lld) != (i1 = %lld)\n",
 	    li1, ndb->node_data[li1].id, i1);
     exit(1);
   }
@@ -200,20 +200,20 @@ int get_local_node_id(NodeDB *ndb, int i1)
 }
 
 /* return the global nodeID of node li1 (localID) */
-int get_global_node_id(const NodeDB *ndb, int li1)
+index_t get_global_node_id(const NodeDB *ndb, index_t li1)
 {
   return ndb->node_data[li1].id;
 }
 
 
 /* return the number of middle-nodes */
-int number_of_middle_nodes(const NodeDB *ndb)
+index_t number_of_middle_nodes(const NodeDB *ndb)
 {
   return ndb->n_mnode;
 }
 
 /* register a middle node between i1 and i2 as a new node */
-int new_middle_node(NodeDB *ndb, int i1, int i2)
+index_t new_middle_node(NodeDB *ndb, index_t i1, index_t i2)
 {
   NodeData *n1p, *n2p;
 
@@ -236,7 +236,7 @@ int new_middle_node(NodeDB *ndb, int i1, int i2)
 /* print node data of the last middle node */
 void print_last_middle_node(const NodeDB *ndb, FILE *fp)
 {
-  fprintf(fp, "%d,%f,%f,%f\n",
+  fprintf(fp, "%lld,%f,%f,%f\n",
 	  ndb->middle_node.id,
 	  ndb->middle_node.x,
 	  ndb->middle_node.y,
@@ -246,7 +246,7 @@ void print_last_middle_node(const NodeDB *ndb, FILE *fp)
 /* print node data in Adventure .msh format */
 void print_node_adv(const NodeDB *ndb, FILE *fp)
 {
-  int i;
+  index_t i;
   for (i = 0; i < ndb->n_node; i++)
     fprintf(fp, "%f %f %f\n",
 	    ndb->node_data[i].x,

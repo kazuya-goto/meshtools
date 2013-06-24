@@ -34,10 +34,10 @@ void usage(void)
 
 static void proceed_node_data(const char *line, NodeDB *ndb)
 {
-  int node_id;
-  coord_t x, y, z;
+  long long node_id;
+  float x, y, z;
 
-  if (sscanf(line, "%d,%f,%f,%f", &node_id, &x, &y, &z) != 4) {
+  if (sscanf(line, "%lld,%f,%f,%f", &node_id, &x, &y, &z) != 4) {
     fprintf(stderr, "Error: reading node data failed\n");
     exit(1);
   }
@@ -47,15 +47,19 @@ static void proceed_node_data(const char *line, NodeDB *ndb)
 static void proceed_elem_data(const char *line,
 			      ElemDB *eldb)
 {
-  int elem_id, n[10], nret;
+  int nret, i;
+  long long elem_id, nl[10], dummy;
+  index_t n[10];
 
-  nret = sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-		&elem_id, &n[0], &n[1], &n[2], &n[3], &n[4],
-		&n[5], &n[6], &n[7], &n[8], &n[9]);
+  nret = sscanf(line,
+                "%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld",
+		&elem_id, &nl[0], &nl[1], &nl[2], &nl[3], &nl[4],
+		&nl[5], &nl[6], &nl[7], &nl[8], &nl[9], &dummy);
   if (nret != 5 && nret != 11) {
     fprintf(stderr, "Error: reading element data failed\n");
     exit(1);
   }
+  for (i = 0; i < 10; i++) n[i] = nl[i];
   new_elem(eldb, elem_id, n);
 }
 
@@ -117,10 +121,10 @@ void refine(FILE *from_file, const char *from_file_name,
     }
   }
 
-  fprintf(to_file, "%d\n", number_of_elems(elemDB));
+  fprintf(to_file, "%lld\n", number_of_elems(elemDB));
   print_elem_adv(elemDB, nodeDB, to_file);
 
-  fprintf(to_file, "%d\n", number_of_nodes(nodeDB));
+  fprintf(to_file, "%lld\n", number_of_nodes(nodeDB));
   print_node_adv(nodeDB, to_file);
 
   meshio_finalize(mio);

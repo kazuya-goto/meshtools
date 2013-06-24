@@ -15,7 +15,7 @@
 
 struct MeshIO {
   char *line;
-  unsigned maxlen;
+  size_t maxlen;
   FILE *meshfile;
   int header_mode;
 };
@@ -62,7 +62,7 @@ char *meshio_readline(MeshIO *mio, int *mode, int *header)
 
   if (strlen(mio->line) == mio->maxlen - 1 &&
       mio->line[mio->maxlen - 2] != '\n') {
-    fprintf(stderr, "too long line (longer than %u)\n", mio->maxlen);
+    fprintf(stderr, "too long line (longer than %lu)\n", mio->maxlen);
     exit(2);
   }
 

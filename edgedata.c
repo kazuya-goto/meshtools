@@ -13,27 +13,27 @@
 #include "util.h"
 
 struct Edge {
-  int onid; /* node id of the other end of the edge */
-  int mnid; /* node id of the middle node */
+  index_t onid; /* node id of the other end of the edge */
+  index_t mnid; /* node id of the middle node */
 };
 
 typedef struct Edge Edge;
 
 struct EdgeData {
-  int nid;
-  int n_edge;  /* number of edges to nodes with greater node-ID *
-		* these nodes are recorded in edge[].           */
-  int n_edge_s; /* number of edges to nodes with smaller node-ID *
-		 * these nodes are not recorded.                 */
+  index_t nid;
+  index_t n_edge;  /* number of edges to nodes with greater node-ID *
+                    * these nodes are recorded in edge[].           */
+  index_t n_edge_s; /* number of edges to nodes with smaller node-ID *
+                     * these nodes are not recorded.                 */
   Edge *edge; /* edge detail */
-  int max_edge; /* allocated length of edge[] */
+  index_t max_edge; /* allocated length of edge[] */
 
 };
 
 typedef struct EdgeData EdgeData;
 
 struct EdgeDB {
-  int n_node_init;
+  index_t n_node_init;
   EdgeData *edge_data;
   NodeDB *ndb;
 };
@@ -43,7 +43,7 @@ enum { MAX_EDGE_GROW_LEN = 4 };
 /* initialize edge_data */
 void edge_init(EdgeDB **edb_p, NodeDB *ndb)
 {
-  int i;
+  index_t i;
   EdgeDB *edb;
 
   *edb_p = (EdgeDB *) emalloc(sizeof(EdgeDB));
@@ -72,7 +72,7 @@ void edge_init(EdgeDB **edb_p, NodeDB *ndb)
 /* finalize edge_data */
 void edge_finalize(EdgeDB *edb)
 {
-  int i;
+  index_t i;
 
   for (i = 0; i < edb->n_node_init; i++)
     free(edb->edge_data[i].edge);
@@ -84,7 +84,7 @@ void edge_finalize(EdgeDB *edb)
 }
 
 /* resize edge_data */
-static void resize_edge(EdgeData *edp, int len)
+static void resize_edge(EdgeData *edp, size_t len)
 {
   edp->edge = (Edge *) erealloc(edp->edge, len * sizeof(Edge));
   edp->max_edge = len;
@@ -94,16 +94,16 @@ static void resize_edge(EdgeData *edp, int len)
    IDs) are set in *mnidp.
    Return value is 1 if the middle node is newly created, or 0 if the
    middle node already exists. */
-int middle_node(EdgeDB *edb, int i1, int i2, int *mnidp)
+index_t middle_node(EdgeDB *edb, index_t i1, index_t i2, index_t *mnidp)
 {
-  int li1, li2; /* local IDs of i1 and i2 */
+  index_t li1, li2; /* local IDs of i1 and i2 */
   EdgeData *edp;
   Edge *ep;
-  int j;
+  index_t j;
 
   /* make i1 smaller than  i2 */
   if (i1 > i2) {
-    int tmp = i1;
+    index_t tmp = i1;
     i1 = i2;
     i2 = tmp;
   } else if (i1 == i2) {
@@ -143,13 +143,13 @@ int middle_node(EdgeDB *edb, int i1, int i2, int *mnidp)
 /* print statistic data, just for interest. */
 void print_edge_stat(const EdgeDB *edb, FILE *log_file)
 {
-  int neg, ne;
-  int min = 10000, max = 0;
-  int sum = 0, sumg = 0;
-  int n_node_actv = 0;
+  index_t neg, ne;
+  index_t min = 10000, max = 0;
+  index_t sum = 0, sumg = 0;
+  index_t n_node_actv = 0;
   float avr;
-  int sum_max = 0;
-  int i;
+  index_t sum_max = 0;
+  index_t i;
 
   for (i = 0; i < edb->n_node_init; i++) {
     neg = edb->edge_data[i].n_edge;
@@ -177,13 +177,13 @@ void print_edge_stat(const EdgeDB *edb, FILE *log_file)
   avr = (float) sum / (float) n_node_actv;
 
   fprintf(log_file,
-	  "             initial number of nodes : %d\n"
-	  "              number of nodes in use : %d\n"
-	  "number of added nodes (middle nodes) : %d\n"
-	  "             minimum number of edges : %d\n"
-	  "             maximum number of edges : %d\n"
+	  "             initial number of nodes : %lld\n"
+	  "              number of nodes in use : %lld\n"
+	  "number of added nodes (middle nodes) : %lld\n"
+	  "             minimum number of edges : %lld\n"
+	  "             maximum number of edges : %lld\n"
 	  "             average number of edges : %f\n"
-	  "                used / allocated (%%) : %d / %d (%f%%)\n",
+	  "                used / allocated (%%) : %lld / %lld (%f%%)\n",
 	  edb->n_node_init,
 	  n_node_actv,
 	  number_of_middle_nodes(edb->ndb),

@@ -15,17 +15,17 @@
 
 /* data set for a single element. */
 struct ElemData {
-  int id;
-  int n[10];
+  index_t id;
+  index_t n[10];
 };
 
 typedef struct ElemData ElemData;
 
 struct ElemDB {
-  int n_elem;
+  index_t n_elem;
   int npe; /* number of nodes per element */
   ElemData *elem_data;
-  int max_elem;
+  index_t max_elem;
   char *elem_header;
 };
 
@@ -72,7 +72,7 @@ void elem_finalize(ElemDB *eldb)
 }
 
 /* register a new element in elem_data */
-void new_elem(ElemDB *eldb, int id, const int *n)
+void new_elem(ElemDB *eldb, index_t id, const index_t *n)
 {
   int i;
 
@@ -95,7 +95,7 @@ void new_elem(ElemDB *eldb, int id, const int *n)
 }
 
 /* return the number of elements */
-int number_of_elems(ElemDB *eldb)
+index_t number_of_elems(ElemDB *eldb)
 {
   return eldb->n_elem;
 }
@@ -103,14 +103,15 @@ int number_of_elems(ElemDB *eldb)
 /* print element data */
 void print_elem(ElemDB *eldb, FILE *fp)
 {
-  int i, j;
+  index_t i;
+  int j;
 
   if (eldb->elem_header != NULL)
     fprintf(fp, "%s", eldb->elem_header);
   for (i = 0; i < eldb->n_elem; i++) {
-    fprintf(fp, "%d", eldb->elem_data[i].id);
+    fprintf(fp, "%lld", eldb->elem_data[i].id);
     for (j = 0; j < eldb->npe; j++)
-      fprintf(fp, ",%d", eldb->elem_data[i].n[j]);
+      fprintf(fp, ",%lld", eldb->elem_data[i].n[j]);
     fprintf(fp, "\n");
   }
 }
@@ -118,12 +119,13 @@ void print_elem(ElemDB *eldb, FILE *fp)
 /* print element data in Adventure .msh format */
 void print_elem_adv(ElemDB *eldb, NodeDB *ndb, FILE *fp)
 {
-  int i, j;
+  index_t i;
+  int j;
   static int f2a[10] = {3, 1, 0, 2, 8, 7, 9, 6, 5, 4};
 
   for (i = 0; i < eldb->n_elem; i++) {
     for (j = 0; j < eldb->npe; j++)
-      fprintf(fp, " %d", get_local_node_id(ndb, eldb->elem_data[i].n[f2a[j]]));
+      fprintf(fp, " %lld", get_local_node_id(ndb, eldb->elem_data[i].n[f2a[j]]));
     fprintf(fp, "\n");
   }
 }

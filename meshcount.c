@@ -13,6 +13,7 @@
 #include <assert.h>
 #include "util.h"
 #include "meshio.h"
+#include "precision.h"
 
 static void usage(void)
 {
@@ -29,8 +30,8 @@ int main(int argc, char *argv[])
   MeshIO *mio;
   int mode;
   int header;
-  int n_node = 0;
-  int n_elem = 0;
+  index_t n_node = 0;
+  index_t n_elem = 0;
 
   setprogname(argv[0]);
   argc--;
@@ -79,6 +80,6 @@ int main(int argc, char *argv[])
   meshio_finalize(mio);
   if (mesh_file != stdin) fclose(mesh_file);
 
-  printf("%d nodes, %d elements\n", n_node, n_elem);
+  printf("%lld nodes, %lld elements\n", n_node, n_elem);
   return 0;
 }

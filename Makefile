@@ -3,7 +3,9 @@ BINDIR = $(PREFIX)/bin
 
 CC = gcc
 
-WARNFLAGS = -Wall -W -pedantic -ansi
+#WARNFLAGS = -Wall -W -pedantic -ansi
+#WARNFLAGS = -Wall -W -pedantic -std=c99
+WARNFLAGS =
 #DEBUGFLAGS = -g
 DEBUGFLAGS = -DNDEBUG
 OPTFLAGS = -O2

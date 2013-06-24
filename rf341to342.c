@@ -48,17 +48,17 @@ static void print_header(FILE *to_file, const char *from_file_name)
 
 static void proceed_node_data(const char *line, NodeDB *ndb, FILE *to_file)
 {
-  int node_id;
-  coord_t x, y, z;
+  long long node_id;
+  float x, y, z;
 
-  if (sscanf(line, "%d,%f,%f,%f", &node_id, &x, &y, &z) != 4) {
+  if (sscanf(line, "%lld,%f,%f,%f", &node_id, &x, &y, &z) != 4) {
     fprintf(stderr, "Error: reading node data failed\n");
     exit(1);
   }
   new_node(ndb, node_id, x, y, z);
 
   /* fprintf(to_file, "%s", line); */
-  fprintf(to_file, "%d,%f,%f,%f\n", node_id, x, y, z);
+  fprintf(to_file, "%lld,%f,%f,%f\n", node_id, x, y, z);
 }
 
 const int mnid[6][3] = {
@@ -73,23 +73,26 @@ const int mnid[6][3] = {
 static void proceed_elem_data(const char *line, NodeDB *ndb, EdgeDB *edb,
 			      FILE *node_file, FILE *elem_file)
 {
-  int elem_id, n[10], dummy, i;
+  int nret, i;
+  long long elem_id, nl[4], dummy;
+  index_t n[10];
 
-  if (sscanf(line,
-	     "%d,%d,%d,%d,%d,%d",
-	     &elem_id, &n[0], &n[1], &n[2], &n[3], &dummy)
-      != 5) {
+  nret = sscanf(line,
+                "%lld,%lld,%lld,%lld,%lld,%lld",
+                &elem_id, &nl[0], &nl[1], &nl[2], &nl[3], &dummy);
+  if (nret != 5) {
     fprintf(stderr, "Error: reading element data failed\n");
     exit(1);
   }
+  for (i = 0; i < 4; i++) n[i] = nl[i];
 
   for (i = 0; i < 6; i++)
     if (middle_node(edb, n[mnid[i][0]], n[mnid[i][1]], &n[mnid[i][2]]))
       print_last_middle_node(ndb, node_file);
 
-  fprintf(elem_file,"%d", elem_id);
+  fprintf(elem_file,"%lld", elem_id);
   for (i = 0; i < 10; i++)
-    fprintf(elem_file, ",%d", n[i]);
+    fprintf(elem_file, ",%lld", n[i]);
   fprintf(elem_file, "\n");
 }
 

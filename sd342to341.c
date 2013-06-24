@@ -51,28 +51,28 @@ static void print_header(FILE *to_file, const char *from_file_name)
 
 static void proceed_node_data(const char *line, NodeDB *ndb, FILE *to_file)
 {
-  int node_id;
-  coord_t x, y, z;
+  long long node_id;
+  float x, y, z;
 
-  if (sscanf(line, "%d,%f,%f,%f", &node_id, &x, &y, &z) != 4) {
+  if (sscanf(line, "%lld,%f,%f,%f", &node_id, &x, &y, &z) != 4) {
     fprintf(stderr, "Error: reading node data failed\n");
     exit(1);
   }
   new_node(ndb, node_id, x, y, z);
 
   /* fprintf(to_file, "%s", line); */
-  fprintf(to_file, "%d,%f,%f,%f\n", node_id, x, y, z);
+  fprintf(to_file, "%lld,%f,%f,%f\n", node_id, x, y, z);
 }
 
 typedef struct ARStat {
   coord_t min; /* min of aspect ratio */
   coord_t max;     /* max of aspect ratio */
-  int min_elem_id;
-  int max_elem_id;
+  index_t min_elem_id;
+  index_t max_elem_id;
   coord_t vmin;
   coord_t vmax;
-  int vmin_elem_id;
-  int vmax_elem_id;
+  index_t vmin_elem_id;
+  index_t vmax_elem_id;
 } ARStat;
 
 static void arstat_init(ARStat *ars)
@@ -87,10 +87,10 @@ static void arstat_init(ARStat *ars)
   ars->vmax_elem_id = -1;
 }
 
-static void arstat_update(ARStat *ars, coord_t ar, coord_t vr, int elem_id, int *nerr)
+static void arstat_update(ARStat *ars, coord_t ar, coord_t vr, index_t elem_id, int *nerr)
 {
   if (ar > BIG_ASPECT_RATIO) {
-    fprintf(stderr, "warning: big aspect ratio: %f at elem %d\n",
+    fprintf(stderr, "warning: big aspect ratio: %f at elem %lld\n",
 	    ar, elem_id);
     (*nerr)++;
   }
@@ -103,7 +103,7 @@ static void arstat_update(ARStat *ars, coord_t ar, coord_t vr, int elem_id, int 
     ars->max_elem_id = elem_id;
   }
   if (vr < 0.5 || vr > 2.0) {
-    fprintf(stderr, "warning: strange volume ratio: %f at elem %d\n",
+    fprintf(stderr, "warning: strange volume ratio: %f at elem %lld\n",
 	    vr, elem_id);
     (*nerr)++;
   }
@@ -120,33 +120,33 @@ static void arstat_update(ARStat *ars, coord_t ar, coord_t vr, int elem_id, int 
 static void print_arstat(const ARStat *ars, FILE *fp)
 {
   fprintf(fp,
-	  "aspect ratio: min = %f (elemID: %d), max = %f (elemID: %d)\n",
+	  "aspect ratio: min = %f (elemID: %lld), max = %f (elemID: %lld)\n",
 	  ars->min, ars->min_elem_id, ars->max, ars->max_elem_id);
   fprintf(fp,
-	  "volume ratio: min = %f (elemID: %d), max = %f (elemID: %d)\n",
+	  "volume ratio: min = %f (elemID: %lld), max = %f (elemID: %lld)\n",
 	  ars->vmin, ars->vmin_elem_id, ars->vmax, ars->vmax_elem_id);
 }
 
-static coord_t volcheck(int eid, int n,
-		    int n0, int n1, int n2, int n3, NodeDB *ndb, int *nerr)
+static coord_t volcheck(index_t eid, index_t n,
+		    index_t n0, index_t n1, index_t n2, index_t n3, NodeDB *ndb, int *nerr)
 {
   coord_t vol;
   if ((vol = penta_vol(ndb, n0, n1, n2, n3)) <= 0) {
-    fprintf(stderr, "Warning: negative volume: %e at elem %d/%d\n",
+    fprintf(stderr, "Warning: negative volume: %e at elem %lld/%lld\n",
 	    vol, eid, n);
     (*nerr)++;
   }
   return vol;
 }
 
-static void elemout(int elem_id, int *n, NodeDB *ndb)
+static void elemout(index_t elem_id, index_t *n, NodeDB *ndb)
 {
   char fname[128];
   FILE *fp;
   int i;
   coord_t x, y, z;
 
-  sprintf(fname, "e%d.inp", elem_id);
+  sprintf(fname, "e%lld.inp", elem_id);
   fp = efopen(fname, "w");
 
   fprintf(fp, "1\ndata\nstep1\n10 1\n");
@@ -157,7 +157,7 @@ static void elemout(int elem_id, int *n, NodeDB *ndb)
   fprintf(fp, "1 0 tet2 1 2 4 3 7 8 6 9 10 5\n"
 	  "1 0\n1 1\nID,\n");
   for (i = 0; i < 10; i++) {
-    fprintf(fp, "%d %d\n", i+1, n[i]);
+    fprintf(fp, "%d %lld\n", i+1, n[i]);
   }
   fclose(fp);
 }
@@ -167,27 +167,31 @@ static void proceed_elem_data(const char *line,
 			      FILE *to_file,
 			      ARStat *ars)
 {
-  int elem_id, n[10];
+  int nret, i;
+  long long elem_id, nl[10], dummy;
+  index_t n[10];
   coord_t ndist47, ndist58, ndist69;
   coord_t ar, vol1, vol8;
   int nerr;
 
-  if (sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-	     &elem_id, &n[0], &n[1], &n[2], &n[3], &n[4],
-	     &n[5], &n[6], &n[7], &n[8], &n[9])
-      != 11) {
+  nret = sscanf(line,
+                "%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld",
+                &elem_id, &nl[0], &nl[1], &nl[2], &nl[3], &nl[4],
+                &nl[5], &nl[6], &nl[7], &nl[8], &nl[9], &dummy);
+  if (nret != 11) {
     fprintf(stderr, "Error: reading element data failed\n");
     exit(1);
   }
+  for (i = 0; i < 10; i++) n[i] = nl[i];
 
   nerr = 0;
   vol1 = volcheck(elem_id, 0, n[0], n[1], n[2], n[3], ndb, &nerr);
   vol8 = 0;
 
-  fprintf(to_file, "%d,%d,%d,%d,%d\n"
-	  "%d,%d,%d,%d,%d\n"
-	  "%d,%d,%d,%d,%d\n"
-	  "%d,%d,%d,%d,%d\n",
+  fprintf(to_file, "%lld,%lld,%lld,%lld,%lld\n"
+	  "%lld,%lld,%lld,%lld,%lld\n"
+	  "%lld,%lld,%lld,%lld,%lld\n"
+	  "%lld,%lld,%lld,%lld,%lld\n",
 	  8*elem_id-7, n[0], n[6], n[5], n[7],
 	  8*elem_id-6, n[6], n[1], n[4], n[8],
 	  8*elem_id-5, n[5], n[4], n[2], n[9],
@@ -203,10 +207,10 @@ static void proceed_elem_data(const char *line,
   ndist69 = node_dist2(ndb, n[6], n[9]);
 
   if (ndist47 < ndist58 && ndist47 < ndist69) {
-    fprintf(to_file, "%d,%d,%d,%d,%d\n"
-	    "%d,%d,%d,%d,%d\n"
-	    "%d,%d,%d,%d,%d\n"
-	    "%d,%d,%d,%d,%d\n",
+    fprintf(to_file, "%lld,%lld,%lld,%lld,%lld\n"
+	    "%lld,%lld,%lld,%lld,%lld\n"
+	    "%lld,%lld,%lld,%lld,%lld\n"
+	    "%lld,%lld,%lld,%lld,%lld\n",
 	    8*elem_id-3, n[4], n[7], n[5], n[6],
 	    8*elem_id-2, n[4], n[7], n[6], n[8],
 	    8*elem_id-1, n[4], n[7], n[8], n[9],
@@ -222,10 +226,10 @@ static void proceed_elem_data(const char *line,
     else
       ar = ndist58/ndist47;
   } else if (ndist58 < ndist69) {
-    fprintf(to_file, "%d,%d,%d,%d,%d\n"
-	    "%d,%d,%d,%d,%d\n"
-	    "%d,%d,%d,%d,%d\n"
-	    "%d,%d,%d,%d,%d\n",
+    fprintf(to_file, "%lld,%lld,%lld,%lld,%lld\n"
+	    "%lld,%lld,%lld,%lld,%lld\n"
+	    "%lld,%lld,%lld,%lld,%lld\n"
+	    "%lld,%lld,%lld,%lld,%lld\n",
 	    8*elem_id-3, n[5], n[8], n[6], n[4],
 	    8*elem_id-2, n[5], n[8], n[4], n[9],
 	    8*elem_id-1, n[5], n[8], n[9], n[7],
@@ -241,10 +245,10 @@ static void proceed_elem_data(const char *line,
     else
       ar = ndist47/ndist58;
   } else {
-    fprintf(to_file, "%d,%d,%d,%d,%d\n"
-	    "%d,%d,%d,%d,%d\n"
-	    "%d,%d,%d,%d,%d\n"
-	    "%d,%d,%d,%d,%d\n",
+    fprintf(to_file, "%lld,%lld,%lld,%lld,%lld\n"
+	    "%lld,%lld,%lld,%lld,%lld\n"
+	    "%lld,%lld,%lld,%lld,%lld\n"
+	    "%lld,%lld,%lld,%lld,%lld\n",
 	    8*elem_id-3, n[6], n[9], n[4], n[5],
 	    8*elem_id-2, n[6], n[9], n[5], n[7],
 	    8*elem_id-1, n[6], n[9], n[7], n[8],
@@ -336,13 +340,13 @@ void refine(FILE *from_file, const char *from_file_name,
       proceed_elem_data(line, nodeDB, to_file, &ars);
 
     } else if (header == EGROUP) {
-      int elem_id;
+      long long elem_id;
 
-      if (sscanf(line, "%d", &elem_id) != 1) {
+      if (sscanf(line, "%lld", &elem_id) != 1) {
 	fprintf(stderr, "Error: reading element group data failed\n");
 	exit(1);
       }
-      fprintf(to_file, "%d\n%d\n%d\n%d\n%d\n%d\n%d\n%d\n",
+      fprintf(to_file, "%lld\n%lld\n%lld\n%lld\n%lld\n%lld\n%lld\n%lld\n",
 	      8*elem_id-7, 8*elem_id-6, 8*elem_id-5, 8*elem_id-4,
 	      8*elem_id-3, 8*elem_id-2, 8*elem_id-1, 8*elem_id);
 
