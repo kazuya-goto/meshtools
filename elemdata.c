@@ -13,12 +13,34 @@
 #include "nodedata.h"
 #include "util.h"
 
+/* data set for a single element. */
+struct ElemData {
+  int id;
+  int n[10];
+};
+
+typedef struct ElemData ElemData;
+
+struct ElemDB {
+  int n_elem;
+  int npe; /* number of nodes per element */
+  ElemData *elem_data;
+  int max_elem;
+  char *elem_header;
+};
+
 enum { MAX_ELEM_INIT = 1024, MAX_ELEM_GROW = 2 };
 
 
 /* initialize elem_data */
-void elem_init(ElemDB *eldb, const char *header)
+void elem_init(ElemDB **eldb_p, const char *header)
 {
+  ElemDB *eldb;
+
+  *eldb_p = (ElemDB *) emalloc(sizeof(ElemDB));
+
+  eldb = *eldb_p;
+
   eldb->n_elem = 0;
   eldb->elem_data = (ElemData *) emalloc(MAX_ELEM_INIT * sizeof(ElemData));
   eldb->max_elem = MAX_ELEM_INIT;
@@ -44,7 +66,9 @@ void elem_init(ElemDB *eldb, const char *header)
 void elem_finalize(ElemDB *eldb)
 {
   free(eldb->elem_data);
-  free (eldb->elem_header);
+  free(eldb->elem_header);
+
+  free(eldb);
 }
 
 /* register a new element in elem_data */

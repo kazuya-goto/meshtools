@@ -67,7 +67,7 @@ void refine(FILE *from_file, const char *from_file_name,
   int header, header_prev = NONE;
   MeshIO mio;
   NodeDB *nodeDB;
-  ElemDB elemDB;
+  ElemDB *elemDB;
 
   if (verbose)
     print_log(stderr, "Starting mesh-type conversion...");
@@ -112,20 +112,20 @@ void refine(FILE *from_file, const char *from_file_name,
       proceed_node_data(line, nodeDB);
 
     } else if (header == ELEMENT) {
-      proceed_elem_data(line, &elemDB);
+      proceed_elem_data(line, elemDB);
 
     }
   }
 
-  fprintf(to_file, "%d\n", number_of_elems(&elemDB));
-  print_elem_adv(&elemDB, nodeDB, to_file);
+  fprintf(to_file, "%d\n", number_of_elems(elemDB));
+  print_elem_adv(elemDB, nodeDB, to_file);
 
   fprintf(to_file, "%d\n", number_of_nodes(nodeDB));
   print_node_adv(nodeDB, to_file);
 
   meshio_finalize(&mio);
   node_finalize(nodeDB);
-  elem_finalize(&elemDB);
+  elem_finalize(elemDB);
 
   if (verbose)
     print_log(stderr, "mesh-type conversion completed.");
