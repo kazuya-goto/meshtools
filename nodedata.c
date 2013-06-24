@@ -11,16 +11,36 @@
 #include "nodedata.h"
 #include "util.h"
 
+struct NodeData {
+  int id;
+  coord_t x;
+  coord_t y;
+  coord_t z;
+};
+
+typedef struct NodeData NodeData;
+
+struct NodeDB {
+  int n_node;
+  NodeData *node_data;
+  int max_node;
+  int issorted;
+  int n_mnode;
+  NodeData middle_node; /* last added middle node */
+};
+
 enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 2 };
 
 /* initialize node_data */
-void node_init(NodeDB *ndb)
+void node_init(NodeDB **ndb)
 {
-  ndb->n_node = 0;
-  ndb->node_data = (NodeData *) emalloc(MAX_NODE_INIT * sizeof(NodeData));
-  ndb->max_node = MAX_NODE_INIT;
-  ndb->issorted = 1;
-  ndb->n_mnode = 0;
+  *ndb = emalloc(sizeof(NodeDB));
+
+  (*ndb)->n_node = 0;
+  (*ndb)->node_data = (NodeData *) emalloc(MAX_NODE_INIT * sizeof(NodeData));
+  (*ndb)->max_node = MAX_NODE_INIT;
+  (*ndb)->issorted = 1;
+  (*ndb)->n_mnode = 0;
 }
 
 /* finalize node_data */
@@ -32,6 +52,8 @@ void node_finalize(NodeDB *ndb)
   ndb->max_node = 0;
   ndb->issorted = 0;
   ndb->n_mnode = 0;
+
+  free(ndb);
 }
 
 /* resize node_data */
@@ -42,7 +64,7 @@ static void resize_node_data(NodeDB *ndb, int len)
 }
 
 /* register a new node in node_data */
-void new_node(NodeDB *ndb, int id, double x, double y, double z)
+void new_node(NodeDB *ndb, int id, coord_t x, coord_t y, coord_t z)
 {
   if (ndb->n_node == ndb->max_node)
     resize_node_data(ndb, ndb->max_node * MAX_NODE_GROW);
@@ -53,9 +75,9 @@ void new_node(NodeDB *ndb, int id, double x, double y, double z)
   }
 
   ndb->node_data[ndb->n_node].id = id;
-  ndb->node_data[ndb->n_node].x = (coord_t) x;
-  ndb->node_data[ndb->n_node].y = (coord_t) y;
-  ndb->node_data[ndb->n_node].z = (coord_t) z;
+  ndb->node_data[ndb->n_node].x = x;
+  ndb->node_data[ndb->n_node].y = y;
+  ndb->node_data[ndb->n_node].z = z;
 
   ndb->n_node++;
 }
@@ -103,21 +125,23 @@ static NodeData *search_node(NodeDB *ndb, int i1)
 }
 
 /* return a square of distance between two nodes */
-double node_dist2(NodeDB *ndb, int i1, int i2)
+coord_t node_dist2(NodeDB *ndb, int i1, int i2)
 {
   NodeData *n1p, *n2p;
+  coord_t dx, dy, dz;
 
   n1p = search_node(ndb, i1);
   n2p = search_node(ndb, i2);
-  return (double) (n1p->x - n2p->x)*(n1p->x - n2p->x) +
-    (n1p->y - n2p->y)*(n1p->y - n2p->y) +
-    (n1p->z - n2p->z)*(n1p->z - n2p->z);
+  dx = n1p->x - n2p->x;
+  dy = n1p->y - n2p->y;
+  dz = n1p->z - n2p->z;
+  return dx*dx + dy*dy + dz*dz;
 }
 
-double penta_vol(NodeDB *ndb, int i0, int i1, int i2, int i3)
+coord_t penta_vol(NodeDB *ndb, int i0, int i1, int i2, int i3)
 {
   NodeData *np[4];
-  double v1[3], v2[3], v3[3];
+  coord_t v1[3], v2[3], v3[3];
 
   np[0] = search_node(ndb, i0);
   np[1] = search_node(ndb, i1);
@@ -141,7 +165,7 @@ double penta_vol(NodeDB *ndb, int i0, int i1, int i2, int i3)
 	  (v1[0] * v2[1] - v1[1] * v2[0]) * v3[2]) / 6.0;
 }
 
-void node_coord(NodeDB *ndb, int id, double *x, double *y, double *z)
+void node_coord(NodeDB *ndb, int id, coord_t *x, coord_t *y, coord_t *z)
 {
   NodeData *np;
 

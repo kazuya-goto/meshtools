@@ -18,7 +18,7 @@ void *emalloc(size_t size)
   ptr = malloc(size);
   if (ptr == NULL) {
     perror("malloc");
-    fprintf(stderr, "malloc of %d bytes failed\n", size);
+    fprintf(stderr, "malloc of %lu bytes failed\n", size);
     exit(2);
   }
   return ptr;
@@ -30,7 +30,7 @@ void *erealloc(void *ptr, size_t size)
   rptr = realloc(ptr, size);
   if (rptr == NULL) {
     perror("realloc");
-    fprintf(stderr, "realloc of %d bytes failed\n", size);
+    fprintf(stderr, "realloc of %lu bytes failed\n", size);
     exit(2);
   }
   return rptr;

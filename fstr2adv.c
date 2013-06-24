@@ -35,9 +35,9 @@ void usage(void)
 static void proceed_node_data(const char *line, NodeDB *ndb)
 {
   int node_id;
-  double x, y, z;
+  coord_t x, y, z;
 
-  if (sscanf(line, "%d,%lf,%lf,%lf", &node_id, &x, &y, &z) != 4) {
+  if (sscanf(line, "%d,%f,%f,%f", &node_id, &x, &y, &z) != 4) {
     fprintf(stderr, "Error: reading node data failed\n");
     exit(1);
   }
@@ -66,7 +66,7 @@ void refine(FILE *from_file, const char *from_file_name,
   int mode;
   int header, header_prev = NONE;
   MeshIO mio;
-  NodeDB nodeDB;
+  NodeDB *nodeDB;
   ElemDB elemDB;
 
   if (verbose)
@@ -109,7 +109,7 @@ void refine(FILE *from_file, const char *from_file_name,
     assert(mode == DATA);
 
     if (header == NODE) {
-      proceed_node_data(line, &nodeDB);
+      proceed_node_data(line, nodeDB);
 
     } else if (header == ELEMENT) {
       proceed_elem_data(line, &elemDB);
@@ -118,13 +118,13 @@ void refine(FILE *from_file, const char *from_file_name,
   }
 
   fprintf(to_file, "%d\n", number_of_elems(&elemDB));
-  print_elem_adv(&elemDB, &nodeDB, to_file);
+  print_elem_adv(&elemDB, nodeDB, to_file);
 
-  fprintf(to_file, "%d\n", number_of_nodes(&nodeDB));
-  print_node_adv(&nodeDB, to_file);
+  fprintf(to_file, "%d\n", number_of_nodes(nodeDB));
+  print_node_adv(nodeDB, to_file);
 
   meshio_finalize(&mio);
-  node_finalize(&nodeDB);
+  node_finalize(nodeDB);
   elem_finalize(&elemDB);
 
   if (verbose)

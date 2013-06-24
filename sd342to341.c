@@ -52,9 +52,9 @@ static void print_header(FILE *to_file, const char *from_file_name)
 static void proceed_node_data(const char *line, NodeDB *ndb, FILE *to_file)
 {
   int node_id;
-  double x, y, z;
+  coord_t x, y, z;
 
-  if (sscanf(line, "%d,%lf,%lf,%lf", &node_id, &x, &y, &z) != 4) {
+  if (sscanf(line, "%d,%f,%f,%f", &node_id, &x, &y, &z) != 4) {
     fprintf(stderr, "Error: reading node data failed\n");
     exit(1);
   }
@@ -65,12 +65,12 @@ static void proceed_node_data(const char *line, NodeDB *ndb, FILE *to_file)
 }
 
 typedef struct ARStat {
-  double min; /* min of aspect ratio */
-  double max;     /* max of aspect ratio */
+  coord_t min; /* min of aspect ratio */
+  coord_t max;     /* max of aspect ratio */
   int min_elem_id;
   int max_elem_id;
-  double vmin;
-  double vmax;
+  coord_t vmin;
+  coord_t vmax;
   int vmin_elem_id;
   int vmax_elem_id;
 } ARStat;
@@ -87,7 +87,7 @@ static void arstat_init(ARStat *ars)
   ars->vmax_elem_id = -1;
 }
 
-static void arstat_update(ARStat *ars, double ar, double vr, int elem_id, int *nerr)
+static void arstat_update(ARStat *ars, coord_t ar, coord_t vr, int elem_id, int *nerr)
 {
   if (ar > BIG_ASPECT_RATIO) {
     fprintf(stderr, "warning: big aspect ratio: %f at elem %d\n",
@@ -127,10 +127,10 @@ static void print_arstat(const ARStat *ars, FILE *fp)
 	  ars->vmin, ars->vmin_elem_id, ars->vmax, ars->vmax_elem_id);
 }
 
-static double volcheck(int eid, int n,
+static coord_t volcheck(int eid, int n,
 		    int n0, int n1, int n2, int n3, NodeDB *ndb, int *nerr)
 {
-  double vol;
+  coord_t vol;
   if ((vol = penta_vol(ndb, n0, n1, n2, n3)) <= 0) {
     fprintf(stderr, "Warning: negative volume: %e at elem %d/%d\n",
 	    vol, eid, n);
@@ -144,7 +144,7 @@ static void elemout(int elem_id, int *n, NodeDB *ndb)
   char fname[128];
   FILE *fp;
   int i;
-  double x, y, z;
+  coord_t x, y, z;
 
   sprintf(fname, "e%d.inp", elem_id);
   fp = efopen(fname, "w");
@@ -168,8 +168,8 @@ static void proceed_elem_data(const char *line,
 			      ARStat *ars)
 {
   int elem_id, n[10];
-  double ndist47, ndist58, ndist69;
-  double ar, vol1, vol8;
+  coord_t ndist47, ndist58, ndist69;
+  coord_t ar, vol1, vol8;
   int nerr;
 
   if (sscanf(line, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
@@ -274,7 +274,7 @@ void refine(FILE *from_file, const char *from_file_name,
   int mode;
   int header, header_prev = NONE;
   MeshIO mio;
-  NodeDB nodeDB;
+  NodeDB *nodeDB;
   ARStat ars;
 
   if (verbose)
@@ -330,10 +330,10 @@ void refine(FILE *from_file, const char *from_file_name,
     assert(mode == DATA);
 
     if (header == NODE) {
-      proceed_node_data(line, &nodeDB, to_file);
+      proceed_node_data(line, nodeDB, to_file);
 
     } else if (header == ELEMENT) {
-      proceed_elem_data(line, &nodeDB, to_file, &ars);
+      proceed_elem_data(line, nodeDB, to_file, &ars);
 
     } else if (header == EGROUP) {
       int elem_id;
@@ -351,7 +351,7 @@ void refine(FILE *from_file, const char *from_file_name,
     }
   }
 
-  node_finalize(&nodeDB);
+  node_finalize(nodeDB);
   meshio_finalize(&mio);
 
   if (verbose) {
