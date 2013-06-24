@@ -1,19 +1,27 @@
-PREFIX = $(HOME)
-BINDIR = $(PREFIX)/bin
-
-CC = gcc
-
-WARNFLAGS = -Wall -W -pedantic -std=c99
-#DEBUGFLAGS = -g
-DEBUGFLAGS = -DNDEBUG
-OPTFLAGS = -O2
-
-#CFLAGS = $(WARNFLAGS) $(DEBUGFLAGS) $(OPTFLAGS) -D_FILE_OFFSET_BITS=64
-CFLAGS = $(WARNFLAGS) $(DEBUGFLAGS) $(OPTFLAGS) -DUSE_INT64
-#CFLAGS = $(WARNFLAGS) $(DEBUGFLAGS) $(OPTFLAGS)
-LDFLAGS =
+-include Makefile.inc
 
 PROGS = rf341to342 sd342to341 meshcount fstr2adv
+
+SRCS = \
+	edgedata.c \
+	elemdata.c \
+	fstr2adv.c \
+	main.c \
+	meshcount.c \
+	meshio.c \
+	nodedata.c \
+	rf341to342.c \
+	sd342to341.c \
+	util.c
+
+HEADERS = \
+	edgedata.h \
+	elemdata.h \
+	meshio.h \
+	nodedata.h \
+	precision.h \
+	refine.h \
+	util.h
 
 .SUFFIXES: .c .o
 
@@ -34,17 +42,16 @@ meshcount: util.o meshio.o meshcount.o
 fstr2adv: util.o meshio.o nodedata.o elemdata.o fstr2adv.o main.o
 	$(CC) -o $@ $(CFLAGS) $^ $(LDFLAGS)
 
+check:
+	@(cd sample-mesh; ./test.sh)
+
 clean:
 	rm -f $(PROGS) *.o *~ *.log *.tmp *.out *.exe *.tar.gz
 
 install: all
 	cp $(PROGS) $(BINDIR)
 
-dist:
-	@ DISTNAME=`svn info | grep Revision | perl -ne 'split;print "meshtools-r$$_[1]";'`; \
-	if [ -d $$DISTNAME ]; then rm -rf $$DISTNAME; fi; \
-	svn export . $$DISTNAME; \
-	if [ -f $$DISTNAME.tar.gz ]; then rm -f $$DISTNAME.tar.gz; fi; \
-	echo Creating $$DISTNAME.tar.gz; \
-	tar zcvf $$DISTNAME.tar.gz $$DISTNAME; \
-	rm -rf $$DISTNAME
+depend: $(SRCS)
+	$(CC) -MM -MG $(SRCS) $(CFLAGS) > Makefile.dep
+
+-include Makefile.dep

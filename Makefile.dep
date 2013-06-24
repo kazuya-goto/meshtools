@@ -1,0 +1,13 @@
+edgedata.o: edgedata.c nodedata.h precision.h edgedata.h util.h
+elemdata.o: elemdata.c elemdata.h precision.h nodedata.h util.h
+fstr2adv.o: fstr2adv.c util.h meshio.h nodedata.h precision.h elemdata.h \
+  refine.h
+main.o: main.c util.h refine.h
+meshcount.o: meshcount.c util.h meshio.h precision.h
+meshio.o: meshio.c meshio.h util.h
+nodedata.o: nodedata.c nodedata.h precision.h util.h
+rf341to342.o: rf341to342.c util.h meshio.h nodedata.h precision.h \
+  edgedata.h refine.h
+sd342to341.o: sd342to341.c util.h meshio.h nodedata.h precision.h \
+  refine.h
+util.o: util.c util.h

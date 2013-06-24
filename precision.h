@@ -7,6 +7,10 @@ typedef long long index_t;
 typedef int index_t;
 #endif
 
+#ifdef USE_DOUBLE
+typedef double coord_t;
+#else
 typedef float coord_t;
+#endif
 
 #endif /* PRECISION_H */

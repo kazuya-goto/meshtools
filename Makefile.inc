@@ -1,0 +1,14 @@
+PREFIX = $(HOME)
+BINDIR = $(PREFIX)/bin
+
+CC = gcc
+
+CFLAGS = -Wall -W -pedantic -std=c99
+#CFLAGS += -g
+CFLAGS += -DNDEBUG -O2
+
+#CFLAGS += -D_FILE_OFFSET_BITS=64
+CFLAGS += -DUSE_INT64
+#CFLAGS += -DUSE_DOUBLE
+
+LDFLAGS =
