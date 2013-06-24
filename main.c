@@ -2,9 +2,9 @@
  * main.c
  *   Main routine for sd342to341 and rf341to342
  *
- * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Author: Kazuya Goto <goto@multi.k.u-tokyo.ac.jp>
  * Created on Dec 15, 2006
- * Last modified on Dec 15, 2006
+ * Last modified on Jun 24, 2013
  *
  */
 #include <stdio.h>

@@ -2,9 +2,9 @@
  * meshcount.c
  *   count the number of nodes and elements in FrontSTR mesh file.
  *
- * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Author: Kazuya Goto <goto@multi.k.race.u-tokyo.ac.jp>
  * Created on Mar 15, 2006
- * Last modified on Dec 16, 2006
+ * Last modified on Jun 24, 2013
  *
  */
 #include <stdio.h>

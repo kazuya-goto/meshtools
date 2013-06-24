@@ -45,6 +45,6 @@ $ meshcount A342-refined.msh
 - ELEMENT section has to be after NODE section.
 
 
-Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+Author: Kazuya Goto <goto@multi.k.u-tokyo.ac.jp>
 Created: Mar 17, 2006
-Modified: Jun 27, 2006
+Modified: Jun 24, 2013

@@ -3,9 +3,9 @@
  *   Subdevide FrontSTR-format 342 mesh data into 341 mesh data with 8
  *   times as many elements
  *
- * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Author: Kazuya Goto <goto@multi.k.u-tokyo.ac.jp>
  * Created on Mar 10, 2006
- * Last modified on Feb 5, 2007
+ * Last modified on Jun 24, 2013
  *
  */
 #include <stdio.h>

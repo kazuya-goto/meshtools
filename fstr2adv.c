@@ -2,9 +2,9 @@
  * fstr2adv.c
  *   Convert FrontSTR-format mesh file into Adventure mesh file
  *
- * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Author: Kazuya Goto <goto@multi.k.u-tokyo.ac.jp>
  * Created on Apr 7, 2006
- * Last modified on Dec 17, 2006
+ * Last modified on Jun 24, 2013
  *
  */
 #include <stdio.h>

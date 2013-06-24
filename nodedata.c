@@ -1,9 +1,9 @@
 /*
  * nodedata.c
  *
- * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Author: Kazuya Goto <goto@multi.k.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last Modified: Feb 5, 2007
+ * Last Modified: Jun 24, 2013
  *
  */
 #include <stdio.h>

@@ -1,9 +1,9 @@
 /*
  * util.c
  *
- * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Author: Kazuya Goto <goto@multi.k.u-tokyo.ac.jp>
  * Created on May 17, 2006
- * Last modified: Dec 15, 2006
+ * Last modified: Jun 24, 2013
  *
  */
 #include <stdio.h>

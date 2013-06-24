@@ -2,9 +2,9 @@
  * rf341to342.c
  *   Refine FrontSTR-format 341 mesh data into 342 mesh data
  *
- * Author: Kazuya Goto <goto@nihonbashi.race.u-tokyo.ac.jp>
+ * Author: Kazuya Goto <goto@multi.k.u-tokyo.ac.jp>
  * Created on Mar 14, 2006
- * Last modified on Dec 15, 2006
+ * Last modified on Jun 24, 2013
  *
  */
 #include <stdio.h>

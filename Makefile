@@ -1,4 +1,4 @@
-PREFIX = $(HOME)/hecmw
+PREFIX = $(HOME)
 BINDIR = $(PREFIX)/bin
 
 CC = gcc
