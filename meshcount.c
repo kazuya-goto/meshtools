@@ -26,7 +26,7 @@ static void usage(void)
 int main(int argc, char *argv[])
 {
   FILE *mesh_file;
-  MeshIO mio;
+  MeshIO *mio;
   int mode;
   int header;
   int n_node = 0;
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
   meshio_init(&mio, mesh_file);
 
-  while (meshio_readline(&mio, &mode, &header)) {
+  while (meshio_readline(mio, &mode, &header)) {
 
     if (mode == COMMENT) continue;
     if (mode == HEADER) continue;
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     else if (header == ELEMENT) n_elem++;
   }
 
-  meshio_finalize(&mio);
+  meshio_finalize(mio);
   if (mesh_file != stdin) fclose(mesh_file);
 
   printf("%d nodes, %d elements\n", n_node, n_elem);

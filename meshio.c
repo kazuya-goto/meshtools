@@ -13,10 +13,23 @@
 #include "meshio.h"
 #include "util.h"
 
+struct MeshIO {
+  char *line;
+  unsigned maxlen;
+  FILE *meshfile;
+  int header_mode;
+};
+
 enum {INIT_MAXLEN = 1024};
 
-void meshio_init(MeshIO *mio, FILE *fp)
+void meshio_init(MeshIO **mio_p, FILE *fp)
 {
+  MeshIO *mio;
+
+  *mio_p = (MeshIO *) emalloc(sizeof(MeshIO));
+
+  mio = *mio_p;
+
   if (fp == NULL) {
     fprintf(stderr, "Error: meshio_init(NULL)\n");
     exit(2);
@@ -34,6 +47,8 @@ void meshio_finalize(MeshIO *mio)
   mio->meshfile = NULL;
   free(mio->line);
   mio->header_mode = NONE;
+
+  free(mio);
 }
 
 /* read a line from mesh file.

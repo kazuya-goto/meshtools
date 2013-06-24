@@ -65,7 +65,7 @@ void refine(FILE *from_file, const char *from_file_name,
   char *line;
   int mode;
   int header, header_prev = NONE;
-  MeshIO mio;
+  MeshIO *mio;
   NodeDB *nodeDB;
   ElemDB *elemDB;
 
@@ -74,7 +74,7 @@ void refine(FILE *from_file, const char *from_file_name,
 
   meshio_init(&mio, from_file);
 
-  while ((line = meshio_readline(&mio, &mode, &header)) != NULL) {
+  while ((line = meshio_readline(mio, &mode, &header)) != NULL) {
 
     if (mode == COMMENT) continue;
 
@@ -123,7 +123,7 @@ void refine(FILE *from_file, const char *from_file_name,
   fprintf(to_file, "%d\n", number_of_nodes(nodeDB));
   print_node_adv(nodeDB, to_file);
 
-  meshio_finalize(&mio);
+  meshio_finalize(mio);
   node_finalize(nodeDB);
   elem_finalize(elemDB);
 

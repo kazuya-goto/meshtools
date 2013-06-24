@@ -99,7 +99,7 @@ void refine(FILE *from_file, const char *from_file_name,
   char *line;
   int mode;
   int header, header_prev = NONE;
-  MeshIO mio;
+  MeshIO *mio;
   NodeDB *nodeDB;
   EdgeDB *edgeDB;
   FILE *tmp_file;
@@ -113,7 +113,7 @@ void refine(FILE *from_file, const char *from_file_name,
   node_init(&nodeDB);
   tmp_file = etmpfile();
 
-  while ((line = meshio_readline(&mio, &mode, &header)) != NULL) {
+  while ((line = meshio_readline(mio, &mode, &header)) != NULL) {
 
     if (mode == COMMENT) {
       fprintf(to_file, "%s", line);
@@ -180,7 +180,7 @@ void refine(FILE *from_file, const char *from_file_name,
 
   edge_finalize(edgeDB);
   node_finalize(nodeDB);
-  meshio_finalize(&mio);
+  meshio_finalize(mio);
   fclose(tmp_file);
 
   if (verbose)

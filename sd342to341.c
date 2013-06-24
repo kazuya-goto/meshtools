@@ -273,7 +273,7 @@ void refine(FILE *from_file, const char *from_file_name,
   char *line;
   int mode;
   int header, header_prev = NONE;
-  MeshIO mio;
+  MeshIO *mio;
   NodeDB *nodeDB;
   ARStat ars;
 
@@ -286,7 +286,7 @@ void refine(FILE *from_file, const char *from_file_name,
   node_init(&nodeDB);
   arstat_init(&ars);
 
-  while ((line = meshio_readline(&mio, &mode, &header)) != NULL) {
+  while ((line = meshio_readline(mio, &mode, &header)) != NULL) {
 
     if (mode == COMMENT) {
       fprintf(to_file, "%s", line);
@@ -352,7 +352,7 @@ void refine(FILE *from_file, const char *from_file_name,
   }
 
   node_finalize(nodeDB);
-  meshio_finalize(&mio);
+  meshio_finalize(mio);
 
   if (verbose) {
     print_log(stderr, "mesh-type conversion completed.");
