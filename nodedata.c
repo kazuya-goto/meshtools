@@ -32,15 +32,19 @@ struct NodeDB {
 enum { MAX_NODE_INIT = 1024, MAX_NODE_GROW = 2 };
 
 /* initialize node_data */
-void node_init(NodeDB **ndb)
+void node_init(NodeDB **ndb_p)
 {
-  *ndb = emalloc(sizeof(NodeDB));
+  NodeDB *ndb;
 
-  (*ndb)->n_node = 0;
-  (*ndb)->node_data = (NodeData *) emalloc(MAX_NODE_INIT * sizeof(NodeData));
-  (*ndb)->max_node = MAX_NODE_INIT;
-  (*ndb)->issorted = 1;
-  (*ndb)->n_mnode = 0;
+  *ndb_p = emalloc(sizeof(NodeDB));
+
+  ndb = *ndb_p;
+
+  ndb->n_node = 0;
+  ndb->node_data = (NodeData *) emalloc(MAX_NODE_INIT * sizeof(NodeData));
+  ndb->max_node = MAX_NODE_INIT;
+  ndb->issorted = 1;
+  ndb->n_mnode = 0;
 }
 
 /* finalize node_data */
