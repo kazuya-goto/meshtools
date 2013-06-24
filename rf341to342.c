@@ -79,7 +79,7 @@ static void proceed_elem_data(const char *line, NodeDB *ndb, EdgeDB *edb,
 
   nret = sscanf(line,
                 "%lld,%lld,%lld,%lld,%lld,%lld",
-                &elem_id, &nl[0], &nl[1], &nl[2], &nl[3], &dummy);
+                &elem_id, nl, nl+1, nl+2, nl+3, &dummy);
   if (nret != 5) {
     fprintf(stderr, "Error: reading element data failed\n");
     exit(1);
@@ -92,7 +92,7 @@ static void proceed_elem_data(const char *line, NodeDB *ndb, EdgeDB *edb,
 
   fprintf(elem_file,"%lld", elem_id);
   for (i = 0; i < 10; i++)
-    fprintf(elem_file, ",%lld", n[i]);
+    fprintf(elem_file, ",%lld", (long long) n[i]);
   fprintf(elem_file, "\n");
 }
 
@@ -107,8 +107,10 @@ void refine(FILE *from_file, const char *from_file_name,
   EdgeDB *edgeDB;
   FILE *tmp_file;
 
-  if (verbose)
-    print_log(stderr, "Starting mesh-type conversion...");
+  if (verbose) {
+    print_log(stderr, "Starting mesh-type conversion (reading from %s)...",
+              from_file_name);
+  }
 
   print_header(to_file, from_file_name);
 

@@ -53,8 +53,8 @@ static void proceed_elem_data(const char *line,
 
   nret = sscanf(line,
                 "%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld",
-		&elem_id, &nl[0], &nl[1], &nl[2], &nl[3], &nl[4],
-		&nl[5], &nl[6], &nl[7], &nl[8], &nl[9], &dummy);
+		&elem_id, nl, nl+1, nl+2, nl+3, nl+4,
+		nl+5, nl+6, nl+7, nl+8, nl+9, &dummy);
   if (nret != 5 && nret != 11) {
     fprintf(stderr, "Error: reading element data failed\n");
     exit(1);
@@ -73,8 +73,10 @@ void refine(FILE *from_file, const char *from_file_name,
   NodeDB *nodeDB;
   ElemDB *elemDB;
 
-  if (verbose)
-    print_log(stderr, "Starting mesh-type conversion...");
+  if (verbose) {
+    print_log(stderr, "Starting mesh-type conversion (reading from %s)...",
+              from_file_name);
+  }
 
   meshio_init(&mio, from_file);
 
@@ -121,10 +123,10 @@ void refine(FILE *from_file, const char *from_file_name,
     }
   }
 
-  fprintf(to_file, "%lld\n", number_of_elems(elemDB));
+  fprintf(to_file, "%lld\n", (long long) number_of_elems(elemDB));
   print_elem_adv(elemDB, nodeDB, to_file);
 
-  fprintf(to_file, "%lld\n", number_of_nodes(nodeDB));
+  fprintf(to_file, "%lld\n", (long long) number_of_nodes(nodeDB));
   print_node_adv(nodeDB, to_file);
 
   meshio_finalize(mio);

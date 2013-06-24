@@ -80,6 +80,6 @@ int main(int argc, char *argv[])
   meshio_finalize(mio);
   if (mesh_file != stdin) fclose(mesh_file);
 
-  printf("%lld nodes, %lld elements\n", n_node, n_elem);
+  printf("%lld nodes, %lld elements\n", (long long) n_node, (long long) n_elem);
   return 0;
 }

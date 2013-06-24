@@ -184,9 +184,9 @@ void print_edge_stat(const EdgeDB *edb, FILE *log_file)
 	  "             maximum number of edges : %lld\n"
 	  "             average number of edges : %f\n"
 	  "                used / allocated (%%) : %lld / %lld (%f%%)\n",
-	  edb->n_node_init,
-	  n_node_actv,
-	  number_of_middle_nodes(edb->ndb),
-	  min, max, avr,
-	  sumg, sum_max, 100.0*(float)sumg/(float)sum_max);
+	  (long long) edb->n_node_init,
+	  (long long) n_node_actv,
+	  (long long) number_of_middle_nodes(edb->ndb),
+	  (long long) min, (long long) max, avr,
+	  (long long) sumg, (long long) sum_max, 100.0*(float)sumg/(float)sum_max);
 }

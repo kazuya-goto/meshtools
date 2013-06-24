@@ -109,9 +109,9 @@ void print_elem(ElemDB *eldb, FILE *fp)
   if (eldb->elem_header != NULL)
     fprintf(fp, "%s", eldb->elem_header);
   for (i = 0; i < eldb->n_elem; i++) {
-    fprintf(fp, "%lld", eldb->elem_data[i].id);
+    fprintf(fp, "%lld", (long long) eldb->elem_data[i].id);
     for (j = 0; j < eldb->npe; j++)
-      fprintf(fp, ",%lld", eldb->elem_data[i].n[j]);
+      fprintf(fp, ",%lld", (long long) eldb->elem_data[i].n[j]);
     fprintf(fp, "\n");
   }
 }
@@ -125,7 +125,7 @@ void print_elem_adv(ElemDB *eldb, NodeDB *ndb, FILE *fp)
 
   for (i = 0; i < eldb->n_elem; i++) {
     for (j = 0; j < eldb->npe; j++)
-      fprintf(fp, " %lld", get_local_node_id(ndb, eldb->elem_data[i].n[f2a[j]]));
+      fprintf(fp, " %lld", (long long) get_local_node_id(ndb, eldb->elem_data[i].n[f2a[j]]));
     fprintf(fp, "\n");
   }
 }

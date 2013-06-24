@@ -91,7 +91,7 @@ static void arstat_update(ARStat *ars, coord_t ar, coord_t vr, index_t elem_id, 
 {
   if (ar > BIG_ASPECT_RATIO) {
     fprintf(stderr, "warning: big aspect ratio: %f at elem %lld\n",
-	    ar, elem_id);
+	    ar, (long long) elem_id);
     (*nerr)++;
   }
   if (ar < ars->min) {
@@ -104,7 +104,7 @@ static void arstat_update(ARStat *ars, coord_t ar, coord_t vr, index_t elem_id, 
   }
   if (vr < 0.5 || vr > 2.0) {
     fprintf(stderr, "warning: strange volume ratio: %f at elem %lld\n",
-	    vr, elem_id);
+	    vr, (long long) elem_id);
     (*nerr)++;
   }
   if (vr < ars->vmin) {
@@ -121,10 +121,10 @@ static void print_arstat(const ARStat *ars, FILE *fp)
 {
   fprintf(fp,
 	  "aspect ratio: min = %f (elemID: %lld), max = %f (elemID: %lld)\n",
-	  ars->min, ars->min_elem_id, ars->max, ars->max_elem_id);
+	  ars->min, (long long) ars->min_elem_id, ars->max, (long long) ars->max_elem_id);
   fprintf(fp,
 	  "volume ratio: min = %f (elemID: %lld), max = %f (elemID: %lld)\n",
-	  ars->vmin, ars->vmin_elem_id, ars->vmax, ars->vmax_elem_id);
+	  ars->vmin, (long long) ars->vmin_elem_id, ars->vmax, (long long) ars->vmax_elem_id);
 }
 
 static coord_t volcheck(index_t eid, index_t n,
@@ -133,7 +133,7 @@ static coord_t volcheck(index_t eid, index_t n,
   coord_t vol;
   if ((vol = penta_vol(ndb, n0, n1, n2, n3)) <= 0) {
     fprintf(stderr, "Warning: negative volume: %e at elem %lld/%lld\n",
-	    vol, eid, n);
+	    vol, (long long) eid, (long long) n);
     (*nerr)++;
   }
   return vol;
@@ -146,7 +146,7 @@ static void elemout(index_t elem_id, index_t *n, NodeDB *ndb)
   int i;
   coord_t x, y, z;
 
-  sprintf(fname, "e%lld.inp", elem_id);
+  sprintf(fname, "e%lld.inp", (long long) elem_id);
   fp = efopen(fname, "w");
 
   fprintf(fp, "1\ndata\nstep1\n10 1\n");
@@ -157,7 +157,7 @@ static void elemout(index_t elem_id, index_t *n, NodeDB *ndb)
   fprintf(fp, "1 0 tet2 1 2 4 3 7 8 6 9 10 5\n"
 	  "1 0\n1 1\nID,\n");
   for (i = 0; i < 10; i++) {
-    fprintf(fp, "%d %lld\n", i+1, n[i]);
+    fprintf(fp, "%d %lld\n", i+1, (long long) n[i]);
   }
   fclose(fp);
 }
@@ -176,13 +176,13 @@ static void proceed_elem_data(const char *line,
 
   nret = sscanf(line,
                 "%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld,%lld",
-                &elem_id, &nl[0], &nl[1], &nl[2], &nl[3], &nl[4],
-                &nl[5], &nl[6], &nl[7], &nl[8], &nl[9], &dummy);
+                &elem_id, nl, nl+1, nl+2, nl+3, nl+4,
+                nl+5, nl+6, nl+7, nl+8, nl+9, &dummy);
   if (nret != 11) {
     fprintf(stderr, "Error: reading element data failed\n");
     exit(1);
   }
-  for (i = 0; i < 10; i++) n[i] = nl[i];
+  for (i = 0; i < 10; i++) n[i] = (index_t) nl[i];
 
   nerr = 0;
   vol1 = volcheck(elem_id, 0, n[0], n[1], n[2], n[3], ndb, &nerr);
@@ -192,10 +192,10 @@ static void proceed_elem_data(const char *line,
 	  "%lld,%lld,%lld,%lld,%lld\n"
 	  "%lld,%lld,%lld,%lld,%lld\n"
 	  "%lld,%lld,%lld,%lld,%lld\n",
-	  8*elem_id-7, n[0], n[6], n[5], n[7],
-	  8*elem_id-6, n[6], n[1], n[4], n[8],
-	  8*elem_id-5, n[5], n[4], n[2], n[9],
-	  8*elem_id-4, n[7], n[8], n[9], n[3]);
+	  8*elem_id-7, nl[0], nl[6], nl[5], nl[7],
+	  8*elem_id-6, nl[6], nl[1], nl[4], nl[8],
+	  8*elem_id-5, nl[5], nl[4], nl[2], nl[9],
+	  8*elem_id-4, nl[7], nl[8], nl[9], nl[3]);
 
   vol8 += volcheck(elem_id, 1, n[0], n[6], n[5], n[7], ndb, &nerr);
   vol8 += volcheck(elem_id, 2, n[6], n[1], n[4], n[8], ndb, &nerr);
@@ -211,10 +211,10 @@ static void proceed_elem_data(const char *line,
 	    "%lld,%lld,%lld,%lld,%lld\n"
 	    "%lld,%lld,%lld,%lld,%lld\n"
 	    "%lld,%lld,%lld,%lld,%lld\n",
-	    8*elem_id-3, n[4], n[7], n[5], n[6],
-	    8*elem_id-2, n[4], n[7], n[6], n[8],
-	    8*elem_id-1, n[4], n[7], n[8], n[9],
-	    8*elem_id, n[4], n[7], n[9], n[5]);
+	    8*elem_id-3, nl[4], nl[7], nl[5], nl[6],
+	    8*elem_id-2, nl[4], nl[7], nl[6], nl[8],
+	    8*elem_id-1, nl[4], nl[7], nl[8], nl[9],
+	    8*elem_id, nl[4], nl[7], nl[9], nl[5]);
 
     vol8 += volcheck(elem_id, 5, n[4], n[7], n[5], n[6], ndb, &nerr);
     vol8 += volcheck(elem_id, 6, n[4], n[7], n[6], n[8], ndb, &nerr);
@@ -230,10 +230,10 @@ static void proceed_elem_data(const char *line,
 	    "%lld,%lld,%lld,%lld,%lld\n"
 	    "%lld,%lld,%lld,%lld,%lld\n"
 	    "%lld,%lld,%lld,%lld,%lld\n",
-	    8*elem_id-3, n[5], n[8], n[6], n[4],
-	    8*elem_id-2, n[5], n[8], n[4], n[9],
-	    8*elem_id-1, n[5], n[8], n[9], n[7],
-	    8*elem_id, n[5], n[8], n[7], n[6]);
+	    8*elem_id-3, nl[5], nl[8], nl[6], nl[4],
+	    8*elem_id-2, nl[5], nl[8], nl[4], nl[9],
+	    8*elem_id-1, nl[5], nl[8], nl[9], nl[7],
+	    8*elem_id, nl[5], nl[8], nl[7], nl[6]);
 
     vol8 += volcheck(elem_id, 5, n[5], n[8], n[6], n[4], ndb, &nerr);
     vol8 += volcheck(elem_id, 6, n[5], n[8], n[4], n[9], ndb, &nerr);
@@ -249,10 +249,10 @@ static void proceed_elem_data(const char *line,
 	    "%lld,%lld,%lld,%lld,%lld\n"
 	    "%lld,%lld,%lld,%lld,%lld\n"
 	    "%lld,%lld,%lld,%lld,%lld\n",
-	    8*elem_id-3, n[6], n[9], n[4], n[5],
-	    8*elem_id-2, n[6], n[9], n[5], n[7],
-	    8*elem_id-1, n[6], n[9], n[7], n[8],
-	    8*elem_id, n[6], n[9], n[8], n[4]);
+	    8*elem_id-3, nl[6], nl[9], nl[4], nl[5],
+	    8*elem_id-2, nl[6], nl[9], nl[5], nl[7],
+	    8*elem_id-1, nl[6], nl[9], nl[7], nl[8],
+	    8*elem_id, nl[6], nl[9], nl[8], nl[4]);
 
     vol8 += volcheck(elem_id, 5, n[6], n[9], n[4], n[5], ndb, &nerr);
     vol8 += volcheck(elem_id, 6, n[6], n[9], n[5], n[7], ndb, &nerr);
@@ -281,8 +281,10 @@ void refine(FILE *from_file, const char *from_file_name,
   NodeDB *nodeDB;
   ARStat ars;
 
-  if (verbose)
-    print_log(stderr, "Starting mesh-type conversion...");
+  if (verbose) {
+    print_log(stderr, "Starting mesh-type conversion (reading from %s)...",
+              from_file_name);
+  }
 
   print_header(to_file, from_file_name);
 

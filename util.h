@@ -14,6 +14,6 @@ extern void file_copy(FILE *from_file, FILE *to_file);
 
 extern void setprogname(const char *str);
 extern const char *progname(void);
-extern void print_log(FILE *fp, const char *log_mesg);
+extern void print_log(FILE *fp, const char *format, ...);
 
 #endif /* UTIL_H */

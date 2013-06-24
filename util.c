@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdarg.h>
 #include "util.h"
 
 void *emalloc(size_t size)
@@ -108,14 +109,20 @@ const char *progname(void)
   return name;
 }
 
-void print_log(FILE *fp, const char *log_mesg)
+void print_log(FILE *fp, const char *format, ...)
 {
   time_t t;
-  char date_str[32];
+  static char date_str[32];
+  static char buf[1024];
+  va_list ap;
+  int ret;
 
   time(&t);
   strcpy(date_str, ctime(&t));
   *strchr(date_str, '\n') = '\0';
-  fprintf(fp, "%s: %s\n", date_str, log_mesg);
+  snprintf(buf, 1023, "%s: %s\n", date_str, format);
+  va_start(ap, format);
+  ret = vfprintf(fp, buf, ap);
+  va_end(ap);
   fflush(fp);
 }

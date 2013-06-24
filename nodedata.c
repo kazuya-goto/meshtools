@@ -122,7 +122,7 @@ static NodeData *search_node(NodeDB *ndb, index_t i1)
   if (n1p == NULL) {
     fprintf(stderr,
             "Error: searching node id failed (node_id may not be sorted)\n"
-	    " could not find data for node %lld\n", i1);
+	    " could not find data for node %lld\n", (long long) i1);
     exit(1);
   }
   return n1p;
@@ -193,7 +193,7 @@ index_t get_local_node_id(NodeDB *ndb, index_t i1)
   if (ndb->node_data[li1].id != i1) {
     fprintf(stderr, "Error: failed get_local_node_id; "
 	    "(node_data[%lld].id = %lld) != (i1 = %lld)\n",
-	    li1, ndb->node_data[li1].id, i1);
+	    (long long) li1, (long long) ndb->node_data[li1].id, (long long) i1);
     exit(1);
   }
   return li1;
@@ -237,7 +237,7 @@ index_t new_middle_node(NodeDB *ndb, index_t i1, index_t i2)
 void print_last_middle_node(const NodeDB *ndb, FILE *fp)
 {
   fprintf(fp, "%lld,%f,%f,%f\n",
-	  ndb->middle_node.id,
+	  (long long) ndb->middle_node.id,
 	  ndb->middle_node.x,
 	  ndb->middle_node.y,
 	  ndb->middle_node.z);
