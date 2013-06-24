@@ -16,4 +16,7 @@ extern void setprogname(const char *str);
 extern const char *progname(void);
 extern void print_log(FILE *fp, const char *format, ...);
 
+extern double get_cputime(void);
+extern double get_wtime(void);
+
 #endif /* UTIL_H */

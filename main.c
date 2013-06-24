@@ -9,7 +9,6 @@
  */
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 #include "util.h"
 #include "refine.h"
 
@@ -19,9 +18,11 @@ int main(int argc, char *argv[])
   FILE *from_file;
   char from_file_name[64];
   FILE *to_file;
-  clock_t before_c, after_c;
+  double tc_s, tc_e;
+  double te_s, te_e;
 
-  before_c = clock();
+  tc_s = get_cputime();
+  te_s = get_wtime();
 
   setprogname(argv[0]);
   argc--;
@@ -66,9 +67,10 @@ int main(int argc, char *argv[])
   if (to_file != stdout) fclose(to_file);
 
   if (verbose) {
-    after_c = clock();
-    fprintf(stderr, " Total time: %.2f sec\n",
-	    (float) (after_c - before_c) / (float) CLOCKS_PER_SEC);
+    tc_e = get_cputime();
+    te_e = get_wtime();
+    fprintf(stderr, " Total time [sec]: %.3f (cpu), %.3f (elapse)\n",
+            tc_e - tc_s, te_e - te_s);
   }
 
   return 0;

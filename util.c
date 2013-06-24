@@ -11,6 +11,8 @@
 #include <string.h>
 #include <time.h>
 #include <stdarg.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 #include "util.h"
 
 void *emalloc(size_t size)
@@ -125,4 +127,19 @@ void print_log(FILE *fp, const char *format, ...)
   ret = vfprintf(fp, buf, ap);
   va_end(ap);
   fflush(fp);
+}
+
+double get_cputime(void)
+{
+  struct rusage rusage;
+  getrusage(RUSAGE_SELF, &rusage);
+  return (double) rusage.ru_utime.tv_sec +
+    ((double) rusage.ru_utime.tv_usec) * 1.0e-6;
+}
+
+double get_wtime(void)
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return (double) tv.tv_sec + ((double) tv.tv_usec) * 1.0e-6;
 }
