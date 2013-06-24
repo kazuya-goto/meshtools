@@ -101,7 +101,7 @@ void refine(FILE *from_file, const char *from_file_name,
   int header, header_prev = NONE;
   MeshIO mio;
   NodeDB *nodeDB;
-  EdgeDB edgeDB;
+  EdgeDB *edgeDB;
   FILE *tmp_file;
 
   if (verbose)
@@ -131,7 +131,7 @@ void refine(FILE *from_file, const char *from_file_name,
       } else if (header_prev == ELEMENT && header != ELEMENT) {
 	if (verbose) {
 	  print_log(stderr, "reading ELEMENT-part completed.");
-	  print_edge_stat(&edgeDB, stderr);
+	  print_edge_stat(edgeDB, stderr);
 	  print_log(stderr, "Copying element data...");
 	}
 	rewind(tmp_file);
@@ -171,14 +171,14 @@ void refine(FILE *from_file, const char *from_file_name,
       proceed_node_data(line, nodeDB, to_file);
 
     } else if (header == ELEMENT) {
-      proceed_elem_data(line, nodeDB, &edgeDB, to_file, tmp_file);
+      proceed_elem_data(line, nodeDB, edgeDB, to_file, tmp_file);
 
     } else {
       fprintf(to_file, "%s", line);
     }
   }
 
-  edge_finalize(&edgeDB);
+  edge_finalize(edgeDB);
   node_finalize(nodeDB);
   meshio_finalize(&mio);
   fclose(tmp_file);

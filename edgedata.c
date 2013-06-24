@@ -12,12 +12,43 @@
 #include "edgedata.h"
 #include "util.h"
 
+struct Edge {
+  int onid; /* node id of the other end of the edge */
+  int mnid; /* node id of the middle node */
+};
+
+typedef struct Edge Edge;
+
+struct EdgeData {
+  int nid;
+  int n_edge;  /* number of edges to nodes with greater node-ID *
+		* these nodes are recorded in edge[].           */
+  int n_edge_s; /* number of edges to nodes with smaller node-ID *
+		 * these nodes are not recorded.                 */
+  Edge *edge; /* edge detail */
+  int max_edge; /* allocated length of edge[] */
+
+};
+
+typedef struct EdgeData EdgeData;
+
+struct EdgeDB {
+  int n_node_init;
+  EdgeData *edge_data;
+  NodeDB *ndb;
+};
+
 enum { MAX_EDGE_GROW_LEN = 4 };
 
 /* initialize edge_data */
-void edge_init(EdgeDB *edb, NodeDB *ndb)
+void edge_init(EdgeDB **edb_p, NodeDB *ndb)
 {
   int i;
+  EdgeDB *edb;
+
+  *edb_p = (EdgeDB *) emalloc(sizeof(EdgeDB));
+
+  edb = *edb_p;
 
   edb->n_node_init = number_of_nodes(ndb);
   if (edb->n_node_init == 0) {
@@ -48,6 +79,8 @@ void edge_finalize(EdgeDB *edb)
   free(edb->edge_data);
   edb->n_node_init = 0;
   edb->ndb = NULL;
+
+  free(edb);
 }
 
 /* resize edge_data */

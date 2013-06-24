@@ -8,7 +8,7 @@
 struct NodeDB;
 typedef struct NodeDB NodeDB;
 
-extern void node_init(NodeDB **ndb);
+extern void node_init(NodeDB **ndb_p);
 extern void node_finalize(NodeDB *ndb);
 extern void new_node(NodeDB *ndb, int id, coord_t x, coord_t y, coord_t z);
 extern void reduce_node_data(NodeDB *ndb);

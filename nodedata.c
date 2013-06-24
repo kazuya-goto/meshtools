@@ -36,7 +36,7 @@ void node_init(NodeDB **ndb_p)
 {
   NodeDB *ndb;
 
-  *ndb_p = emalloc(sizeof(NodeDB));
+  *ndb_p = (NodeDB *) emalloc(sizeof(NodeDB));
 
   ndb = *ndb_p;
 

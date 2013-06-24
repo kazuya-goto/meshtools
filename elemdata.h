@@ -7,7 +7,7 @@
 struct ElemDB;
 typedef struct ElemDB ElemDB;
 
-extern void elem_init(ElemDB **eldb, const char *header);
+extern void elem_init(ElemDB **eldb_p, const char *header);
 extern void elem_finalize(ElemDB *eldb);
 extern void new_elem(ElemDB *eldb, int id, const int *n);
 extern int number_of_elems(ElemDB *eldb);
